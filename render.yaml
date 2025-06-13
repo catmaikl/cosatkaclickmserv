@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: cosatka-ws-server
+    env: node
+    buildCommand: npm install ws uuid
+    startCommand: node mserver.js
+    healthCheckPath: /health
