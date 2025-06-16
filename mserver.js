@@ -79,42 +79,17 @@ function handleCreateRoom(ws, data) {
 
 function handleJoinRoom(ws, data) {
   const room = rooms.get(data.roomId);
+  if (!room) return;
 
-  if (!room) {
-    ws.send(JSON.stringify({
-      type: 'error',
-      message: 'Комната не найдена',
-    }));
-    return;
+  room.players.push({ ws, playerId: data.playerId, name: data.playerName, avatar: data.avatar, score: 0 });
+
+  console.log(`Игрок ${data.playerName} присоединился. Всего игроков: ${room.players.length}`);
+
+  // Если комната заполнена (2 игрока), запускаем игру
+  if (room.players.length === 2) {
+    console.log(`Комната ${data.roomId} заполнена, запускаем игру...`);
+    handleStartGame(data.roomId); // <- Вот это должно сработать
   }
-
-  if (room.players.length >= 2) {
-    ws.send(JSON.stringify({
-      type: 'error',
-      message: 'Комната заполнена',
-    }));
-    return;
-  }
-
-  room.players.push({
-    ws,
-    playerId: data.playerId,
-    name: data.playerName,
-    avatar: data.avatar,
-    score: 0,
-  });
-
-  room.players.forEach(player => {
-    player.ws.send(JSON.stringify({
-      type: 'player_joined',
-      opponent: {
-        name: data.playerName,
-        avatar: data.avatar,
-      },
-    }));
-  });
-
-  console.log(`Игрок ${data.playerName} присоединился к комнате ${data.roomId}`);
 }
 
 function handleStartGame(roomId) {
