@@ -152,41 +152,44 @@ function handleStartGame(roomId) {
 }
 
 function handleScoreUpdate(roomId, playerId, score) {
-    console.log(`Score update received - Room: ${roomId}, Player: ${playerId}, Score: ${score}`); // Логирование
+    console.log(`[SCORE_UPDATE] Room: ${roomId}, Player: ${playerId}, Score: ${score}`);
     
     const room = rooms.get(roomId);
     if (!room) {
-        console.warn(`Room ${roomId} not found`);
+        console.error(`Room ${roomId} not found`);
         return;
     }
 
     if (room.gameState !== 'playing') {
-        console.warn(`Game in room ${roomId} is not in playing state`);
+        console.error(`Game in room ${roomId} is not in playing state`);
         return;
     }
 
+    // Обновляем счет игрока
     const player = room.players.find(p => p.playerId === playerId);
     if (!player) {
-        console.warn(`Player ${playerId} not found in room ${roomId}`);
+        console.error(`Player ${playerId} not found in room ${roomId}`);
         return;
     }
-
     player.score = score;
 
-    // Отправляем обновление всем другим игрокам в комнате
-    room.players.forEach(p => {
-        if (p.playerId !== playerId && p.ws.readyState === WebSocket.OPEN) {
-            console.log(`Sending score update to opponent ${p.playerId}`); // Логирование
-            p.ws.send(JSON.stringify({
-                type: 'opponent_score_update',  // Важно: тип должен совпадать с ожидаемым на клиенте
-                roomId: roomId,
-                playerId: playerId,
-                score: score
-            }));
+    // Отправляем обновление ВСЕМ другим игрокам в комнате
+    room.players.forEach(opponent => {
+        if (opponent.playerId !== playerId) {
+            console.log(`Sending update to opponent ${opponent.playerId}`);
+            try {
+                opponent.ws.send(JSON.stringify({
+                    type: 'opponent_score_update',
+                    playerId: playerId,
+                    score: score,
+                    roomId: roomId
+                }));
+            } catch (e) {
+                console.error(`Error sending to ${opponent.playerId}:`, e);
+            }
         }
     });
 }
-
 function endGame(roomId) {
   const room = rooms.get(roomId);
   if (!room) return;
