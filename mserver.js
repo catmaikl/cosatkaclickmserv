@@ -47,7 +47,7 @@ function handleMessage(ws, data) {
       handleStartGame(data.roomId);
       break;
 
-    case 'opponent_score_update':
+    case 'score_update':
       handleScoreUpdate(data.roomId, data.playerId, data.score);
       break;
 
@@ -169,43 +169,24 @@ function handleStartGame(roomId) {
 
 
 function handleScoreUpdate(roomId, playerId, score) {
-    console.log(`[SCORE_UPDATE] Room: ${roomId}, Player: ${playerId}, Score: ${score}`);
-    
-    const room = rooms.get(roomId);
-    if (!room) {
-        console.error(`Room ${roomId} not found`);
-        return;
-    }
+  const room = rooms.get(roomId);
+  if (!room || room.gameState !== 'playing') return;
 
-    if (room.gameState !== 'playing') {
-        console.error(`Game in room ${roomId} is not in playing state`);
-        return;
-    }
+  const player = room.players.find(p => p.playerId === playerId);
+  if (!player) return;
 
-    // Обновляем счет игрока
-    const player = room.players.find(p => p.playerId === playerId);
-    if (!player) {
-        console.error(`Player ${playerId} not found in room ${roomId}`);
-        return;
-    }
-    player.score = score;
+  player.score = score;
 
-    // Отправляем обновление ВСЕМ игрокам в комнате
-    room.players.forEach(opponent => {
-        if (opponent.playerId !== playerId && opponent.ws.readyState === WebSocket.OPEN) {
-            console.log(`Sending update to opponent ${opponent.playerId}`);
-            try {
-                opponent.ws.send(JSON.stringify({
-                    type: 'score_update',  // Изменено с 'opponent_score_update'
-                    playerId: playerId,
-                    score: score,
-                    roomId: roomId
-                }));
-            } catch (e) {
-                console.error(`Error sending to ${opponent.playerId}:`, e);
-            }
-        }
-    });
+  // Отправляем обновление оппоненту
+  const opponent = room.players.find(p => p.playerId !== playerId);
+  console.log(opponent)
+  if (opponent && opponent.ws.readyState === WebSocket.OPEN) {
+    opponent.ws.send(JSON.stringify({
+      type: 'score_update',
+      playerId: playerId,
+      score: score
+    }));
+  }
 }
 
 function endGame(roomId) {
