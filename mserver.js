@@ -152,22 +152,22 @@ function handleStartGame(roomId) {
 }
 
 function handleScoreUpdate(roomId, playerId, score) {
-  const room = rooms.get(roomId);
-  if (!room || room.gameState !== 'playing') return;
+    const room = rooms.get(roomId);
+    if (!room || room.gameState !== 'playing') return;
 
-  const player = room.players.find(p => p.playerId === playerId);
-  if (!player) return;
+    const player = room.players.find(p => p.playerId === playerId);
+    if (!player) return;
 
-  player.score = score;
+    player.score = score;
 
-  const opponent = room.players.find(p => p.playerId !== playerId);
-  if (opponent) {
-    opponent.ws.send(JSON.stringify({
-      type: 'opponent_score_update',
-      score,
-      playerId
-    }));
-  }
+    const opponent = room.players.find(p => p.playerId !== playerId);
+    if (opponent) {
+        opponent.ws.send(JSON.stringify({
+            type: 'opponent_score_update',
+            score,
+            playerId
+        }));
+    }
 }
 
 function endGame(roomId) {
