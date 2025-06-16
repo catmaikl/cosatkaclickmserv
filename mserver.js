@@ -152,22 +152,39 @@ function handleStartGame(roomId) {
 }
 
 function handleScoreUpdate(roomId, playerId, score) {
+    console.log(`Score update received - Room: ${roomId}, Player: ${playerId}, Score: ${score}`); // Логирование
+    
     const room = rooms.get(roomId);
-    if (!room || room.gameState !== 'playing') return;
+    if (!room) {
+        console.warn(`Room ${roomId} not found`);
+        return;
+    }
+
+    if (room.gameState !== 'playing') {
+        console.warn(`Game in room ${roomId} is not in playing state`);
+        return;
+    }
 
     const player = room.players.find(p => p.playerId === playerId);
-    if (!player) return;
+    if (!player) {
+        console.warn(`Player ${playerId} not found in room ${roomId}`);
+        return;
+    }
 
     player.score = score;
 
-    const opponent = room.players.find(p => p.playerId !== playerId);
-    if (opponent) {
-        opponent.ws.send(JSON.stringify({
-            type: 'opponent_score_update',
-            score,
-            playerId
-        }));
-    }
+    // Отправляем обновление всем другим игрокам в комнате
+    room.players.forEach(p => {
+        if (p.playerId !== playerId && p.ws.readyState === WebSocket.OPEN) {
+            console.log(`Sending score update to opponent ${p.playerId}`); // Логирование
+            p.ws.send(JSON.stringify({
+                type: 'opponent_score_update',  // Важно: тип должен совпадать с ожидаемым на клиенте
+                roomId: roomId,
+                playerId: playerId,
+                score: score
+            }));
+        }
+    });
 }
 
 function endGame(roomId) {
