@@ -169,23 +169,43 @@ function handleStartGame(roomId) {
 
 
 function handleScoreUpdate(roomId, playerId, score) {
-  const room = rooms.get(roomId);
-  if (!room || room.gameState !== 'playing') return;
+    console.log(`[SCORE_UPDATE] Room: ${roomId}, Player: ${playerId}, Score: ${score}`);
+    
+    const room = rooms.get(roomId);
+    if (!room) {
+        console.error(`Room ${roomId} not found`);
+        return;
+    }
 
-  const player = room.players.find(p => p.playerId === playerId);
-  if (!player) return;
+    if (room.gameState !== 'playing') {
+        console.error(`Game in room ${roomId} is not in playing state`);
+        return;
+    }
 
-  player.score = score;
+    // Обновляем счет игрока
+    const player = room.players.find(p => p.playerId === playerId);
+    if (!player) {
+        console.error(`Player ${playerId} not found in room ${roomId}`);
+        return;
+    }
+    player.score = score;
 
-  // Отправляем обновление оппоненту
-  const opponent = room.players.find(p => p.playerId !== playerId);
-  if (opponent && opponent.ws.readyState === WebSocket.OPEN) {
-    opponent.ws.send(JSON.stringify({
-      type: 'score_update',
-      playerId: playerId,
-      score: score
-    }));
-  }
+    // Отправляем обновление ВСЕМ игрокам в комнате
+    room.players.forEach(opponent => {
+        if (opponent.playerId !== playerId && opponent.ws.readyState === WebSocket.OPEN) {
+            console.log(`Sending update to opponent ${opponent.playerId}`);
+            try {
+                opponent.ws.send(JSON.stringify({
+                    type: 'score_update',  // Изменено с 'opponent_score_update'
+                    playerId: playerId,
+                    score: score,
+                    roomId: roomId
+                }));
+            } catch (e) {
+                console.error(`Error sending to ${opponent.playerId}:`, e);
+            }
+        }
+    });
 }
 
 function endGame(roomId) {
