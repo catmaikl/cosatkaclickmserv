@@ -179,8 +179,8 @@ function handleScoreUpdate(roomId, playerId, score) {
 
   // Отправляем обновление оппоненту
   const opponent = room.players.find(p => p.playerId !== playerId);
-  console.log(opponent)
   if (opponent && opponent.ws.readyState === WebSocket.OPEN) {
+    console.log(opponent.ws.readyState)
     opponent.ws.send(JSON.stringify({
       type: 'score_update',
       playerId: playerId,
