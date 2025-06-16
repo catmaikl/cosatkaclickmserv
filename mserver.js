@@ -21,6 +21,7 @@ wss.on('connection', (ws) => {
   ws.on('message', (message) => {
     try {
       const data = JSON.parse(message);
+      console.log('Получено сообщение:', data); // Логирование
       handleMessage(ws, data);
     } catch (err) {
       console.error('Ошибка парсинга сообщения:', err);
@@ -41,10 +42,6 @@ function handleMessage(ws, data) {
 
     case 'join_room':
       handleJoinRoom(ws, data);
-      break;
-
-    case 'start_game':
-      handleStartGame(data.roomId);
       break;
 
     case 'score_update':
@@ -79,61 +76,68 @@ function handleCreateRoom(ws, data) {
 
 function handleJoinRoom(ws, data) {
   const room = rooms.get(data.roomId);
-  if (!room) return;
+  if (!room) {
+    ws.send(JSON.stringify({
+      type: 'error',
+      message: 'Комната не найдена'
+    }));
+    return;
+  }
 
-  room.players.push({ ws, playerId: data.playerId, name: data.playerName, avatar: data.avatar, score: 0 });
+  if (room.players.length >= 2) {
+    ws.send(JSON.stringify({
+      type: 'error',
+      message: 'Комната уже заполнена'
+    }));
+    return;
+  }
+
+  room.players.push({ 
+    ws, 
+    playerId: data.playerId, 
+    name: data.playerName, 
+    avatar: data.avatar, 
+    score: 0 
+  });
 
   console.log(`Игрок ${data.playerName} присоединился. Всего игроков: ${room.players.length}`);
 
-  // Отправляем данные об оппоненте каждому игроку
+  // Уведомляем всех игроков о подключении
   room.players.forEach((player, index) => {
-    const opponentIndex = 1 - index; // Индекс оппонента (0 или 1)
+    const opponentIndex = 1 - index;
     const opponent = room.players[opponentIndex];
 
     player.ws.send(JSON.stringify({
-      type: "join_room", // Тип сообщения, который ждёт клиент
+      type: 'opponent_joined',
       opponent: {
         name: opponent.name,
         avatar: opponent.avatar,
-      },
+        playerId: opponent.playerId
+      }
     }));
   });
 
-  // Если комната заполнена (2 игрока), запускаем игру
+  // Если комната заполнена, начинаем игру
   if (room.players.length === 2) {
-    console.log(`Комната ${data.roomId} заполнена, запускаем игру...`);
-    handleStartGame(data.roomId);
+    startGame(roomId);
   }
 }
 
-function handleStartGame(roomId) {
+function startGame(roomId) {
   const room = rooms.get(roomId);
   if (!room || room.players.length !== 2) return;
 
   room.gameState = 'playing';
+  const gameDuration = 60; // 60 секунд
 
-  const playersData = room.players.map(player => ({
-    playerId: player.playerId,
-    name: player.name,
-    avatar: player.avatar,
-    score: player.score
-  }));
-
-  room.players.forEach((player, index) => {
-    const opponentIndex = 1 - index;
+  room.players.forEach(player => {
     player.ws.send(JSON.stringify({
-    type: 'game_start',
-    opponent: {
-      name: playersData[opponentIndex].name,
-      avatar: playersData[opponentIndex].avatar,
-      playerId: playersData[opponentIndex].playerId
-    },
-    duration: 60,
-    startTime: Date.now()
-  }));
+      type: 'game_start',
+      duration: gameDuration
+    }));
   });
 
-  let timeLeft = 60;
+  let timeLeft = gameDuration;
   room.timerInterval = setInterval(() => {
     timeLeft--;
 
@@ -152,67 +156,52 @@ function handleStartGame(roomId) {
 }
 
 function handleScoreUpdate(roomId, playerId, score) {
-    console.log(`[SCORE_UPDATE] Room: ${roomId}, Player: ${playerId}, Score: ${score}`);
-    
-    const room = rooms.get(roomId);
-    if (!room) {
-        console.error(`Room ${roomId} not found`);
-        return;
-    }
+  const room = rooms.get(roomId);
+  if (!room || room.gameState !== 'playing') return;
 
-    if (room.gameState !== 'playing') {
-        console.error(`Game in room ${roomId} is not in playing state`);
-        return;
-    }
+  const player = room.players.find(p => p.playerId === playerId);
+  if (!player) return;
 
-    // Обновляем счет игрока
-    const player = room.players.find(p => p.playerId === playerId);
-    if (!player) {
-        console.error(`Player ${playerId} not found in room ${roomId}`);
-        return;
-    }
-    player.score = score;
+  player.score = score;
 
-    // Отправляем обновление ВСЕМ другим игрокам в комнате
-    room.players.forEach(opponent => {
-        if (opponent.playerId !== playerId) {
-            console.log(`Sending update to opponent ${opponent.playerId}`);
-            try {
-                opponent.ws.send(JSON.stringify({
-                    type: 'opponent_score_update',
-                    playerId: playerId,
-                    score: score,
-                    roomId: roomId
-                }));
-            } catch (e) {
-                console.error(`Error sending to ${opponent.playerId}:`, e);
-            }
-        }
-    });
+  // Отправляем обновление счета оппоненту
+  room.players.forEach(p => {
+    if (p.playerId !== playerId && p.ws.readyState === WebSocket.OPEN) {
+      p.ws.send(JSON.stringify({
+        type: 'opponent_score_update',
+        score: score
+      }));
+    }
+  });
 }
+
 function endGame(roomId) {
   const room = rooms.get(roomId);
   if (!room) return;
 
-  room.gameState = 'finished';
   const [player1, player2] = room.players;
-
   const result = {
-    winner: player1.score > player2.score ? player1.playerId : 
-            player2.score > player1.score ? player2.playerId : 'draw',
+    isDraw: player1.score === player2.score,
     player1Score: player1.score,
-    player2Score: player2.score,
+    player2Score: player2.score
   };
 
   room.players.forEach(player => {
+    const isWinner = !result.isDraw && 
+      (player.playerId === player1.playerId ? 
+       player1.score > player2.score : 
+       player2.score > player1.score);
+
     player.ws.send(JSON.stringify({
       type: 'game_result',
-      ...result,
-      isWinner: result.winner === player.playerId,
-      isDraw: result.winner === 'draw',
+      isWinner,
+      isDraw: result.isDraw,
+      player1Score: result.player1Score,
+      player2Score: result.player2Score
     }));
   });
 
+  // Удаляем комнату через 30 секунд
   setTimeout(() => {
     rooms.delete(roomId);
     console.log(`Комната ${roomId} удалена`);
@@ -222,17 +211,14 @@ function endGame(roomId) {
 function removePlayerFromRooms(ws) {
   rooms.forEach((room, roomId) => {
     room.players = room.players.filter(player => player.ws !== ws);
+    
     if (room.players.length === 0) {
       rooms.delete(roomId);
-    } else if (room.players.length === 1 && room.gameState === 'playing') {
-      // Если один игрок отключился во время игры
+    } else if (room.gameState === 'playing') {
+      // Уведомляем оставшегося игрока о дисконнекте
       const remainingPlayer = room.players[0];
       remainingPlayer.ws.send(JSON.stringify({
-        type: 'game_result',
-        isWinner: true,
-        isDraw: false,
-        player1Score: remainingPlayer.score,
-        player2Score: 0
+        type: 'opponent_disconnected'
       }));
       
       if (room.timerInterval) {
