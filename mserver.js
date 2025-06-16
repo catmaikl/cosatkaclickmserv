@@ -85,10 +85,24 @@ function handleJoinRoom(ws, data) {
 
   console.log(`Игрок ${data.playerName} присоединился. Всего игроков: ${room.players.length}`);
 
+  // Отправляем данные об оппоненте каждому игроку
+  room.players.forEach((player, index) => {
+    const opponentIndex = 1 - index; // Индекс оппонента (0 или 1)
+    const opponent = room.players[opponentIndex];
+
+    player.ws.send(JSON.stringify({
+      type: "join_room", // Тип сообщения, который ждёт клиент
+      opponent: {
+        name: opponent.name,
+        avatar: opponent.avatar,
+      },
+    }));
+  });
+
   // Если комната заполнена (2 игрока), запускаем игру
   if (room.players.length === 2) {
     console.log(`Комната ${data.roomId} заполнена, запускаем игру...`);
-    handleStartGame(data.roomId); // <- Вот это должно сработать
+    handleStartGame(data.roomId);
   }
 }
 
