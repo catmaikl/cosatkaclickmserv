@@ -1,260 +1,340 @@
 const express = require('express');
 const WebSocket = require('ws');
 const http = require('http');
-const cors = require('cors');
+const path = require('path');
+const crypto = require('crypto');
 
 const app = express();
-app.use(cors());
-
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
-const rooms = new Map();
+// Конфигурация сервера
+const PORT = process.env.PORT || 10000;
+const GAME_DURATION = 60; // Длительность игры в секундах
 
+// Хранилище данных
+const rooms = new Map(); // Все комнаты
+const clients = new Map(); // Все подключенные клиенты
+
+// Middleware
+app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.json());
+
+// Генерация ID комнаты
 function generateRoomId() {
-  return Math.random().toString(36).substring(2, 6).toUpperCase();
+    return crypto.randomBytes(3).toString('hex').toUpperCase();
 }
 
+// Обработка WebSocket соединений
 wss.on('connection', (ws) => {
-  console.log('Новое подключение');
+    const clientId = crypto.randomBytes(8).toString('hex');
+    clients.set(clientId, ws);
+    console.log(`Новое подключение: ${clientId}`);
 
-  // Отправка ping каждые 30 секунд
-  // const pingInterval = setInterval(() => {
-  //   if (ws.readyState === WebSocket.OPEN) {
-  //     ws.ping();
-  //   }
-  // }, 30000);
+    ws.clientId = clientId;
+    ws.roomId = null;
+    ws.playerName = null;
+    ws.avatar = null;
 
-  ws.on('message', (message) => {
-    try {
-      const data = JSON.parse(message);
-      handleMessage(ws, data);
-    } catch (err) {
-      console.error('Ошибка парсинга сообщения:', err);
-    }
-  });
-
-  ws.on('close', () => {
-    console.log('Клиент отключился');
-    removePlayerFromRooms(ws);
-  });
-});
-
-function handleMessage(ws, data) {
-  switch (data.type) {
-    case 'create_room':
-      handleCreateRoom(ws, data);
-      break;
-
-    case 'join_room':
-      handleJoinRoom(ws, data);
-      break;
-
-    case 'start_game':
-      handleStartGame(data.roomId);
-      break;
-
-    case 'score_update':
-      handleScoreUpdate(data.roomId, data.playerId, data.score);
-      break;
-
-    default:
-      console.warn('Неизвестный тип сообщения:', data.type);
-  }
-}
-
-function handleCreateRoom(ws, data) {
-  const roomId = generateRoomId();
-  rooms.set(roomId, {
-    players: [{
-      ws,
-      playerId: data.playerId,
-      name: data.playerName,
-      avatar: data.avatar,
-      score: 0,
-    }],
-    gameState: 'waiting',
-  });
-
-  ws.send(JSON.stringify({
-    type: 'room_created',
-    roomId,
-  }));
-
-  console.log(`Комната ${roomId} создана`);
-}
-
-function handleJoinRoom(ws, data) {
-  const room = rooms.get(data.roomId);
-  if (!room) {
-    ws.send(JSON.stringify({
-      type: "error",
-      message: "Комната не найдена"
-    }));
-    return;
-  }
-
-  if (room.players.length >= 2) {
-    ws.send(JSON.stringify({
-      type: "error",
-      message: "Комната уже заполнена"
-    }));
-    return;
-  }
-
-  const newPlayer = {
-    ws,
-    playerId: data.playerId,
-    name: data.playerName,
-    avatar: data.avatar,
-    score: 0
-  };
-  room.players.push(newPlayer);
-
-  console.log(`Игрок ${data.playerName} присоединился. Всего игроков: ${room.players.length}`);
-
-  // Уведомляем первого игрока о подключении второго
-  if (room.players.length === 2) {
-    room.players[0].ws.send(JSON.stringify({
-      type: "opponent_joined",
-      opponent: {
-        name: newPlayer.name,
-        avatar: newPlayer.avatar,
-        playerId: newPlayer.playerId
-      }
-    }));
-
-    room.players[1].ws.send(JSON.stringify({
-      type: "opponent_joined",
-      opponent: {
-        name: room.players[0].name,
-        avatar: room.players[0].avatar,
-        playerId: room.players[0].playerId
-      }
-    }));
-
-    // Запускаем игру через 3 секунды
-    setTimeout(() => handleStartGame(data.roomId), 3000);
-  }
-}
-
-function handleStartGame(roomId) {
-  const room = rooms.get(roomId);
-  if (!room || room.players.length !== 2) return;
-
-  room.gameState = 'playing';
-  room.startTime = Date.now();
-
-  room.players.forEach(player => {
-    if (player.ws.readyState === WebSocket.OPEN) {
-      player.ws.send(JSON.stringify({
-        type: 'game_start',
-        duration: 60
-      }));
-    }
-  });
-
-  let timeLeft = 60;
-  room.timerInterval = setInterval(() => {
-    timeLeft--;
-
-    room.players.forEach(player => {
-      if (player.ws.readyState === WebSocket.OPEN) {
-        player.ws.send(JSON.stringify({
-          type: 'timer_update',
-          timeLeft: timeLeft
-        }));
-      }
+    // Обработка сообщений от клиента
+    ws.on('message', (message) => {
+        try {
+            const data = JSON.parse(message);
+            handleClientMessage(ws, data);
+        } catch (e) {
+            console.error('Ошибка обработки сообщения:', e);
+            sendError(ws, 'Неверный формат сообщения');
+        }
     });
 
-    if (timeLeft <= 0) {
-      clearInterval(room.timerInterval);
-      endGame(roomId);
+    // Обработка закрытия соединения
+    ws.on('close', () => {
+        console.log(`Соединение закрыто: ${clientId}`);
+        handleDisconnect(ws);
+        clients.delete(clientId);
+    });
+
+    // Обработка ошибок
+    ws.on('error', (error) => {
+        console.error(`Ошибка WebSocket (${clientId}):`, error);
+        handleDisconnect(ws);
+        clients.delete(clientId);
+    });
+});
+
+// Обработка сообщений от клиента
+function handleClientMessage(ws, data) {
+    if (!data.type) {
+        sendError(ws, 'Не указан тип сообщения');
+        return;
     }
-  }, 1000);
+
+    switch (data.type) {
+        case 'create_room':
+            handleCreateRoom(ws, data);
+            break;
+        case 'join_room':
+            handleJoinRoom(ws, data);
+            break;
+        case 'score_update':
+            handleScoreUpdate(ws, data);
+            break;
+        case 'game_result':
+            handleGameResult(ws, data);
+            break;
+        default:
+            sendError(ws, 'Неизвестный тип сообщения');
+    }
 }
 
+// Создание комнаты
+function handleCreateRoom(ws, data) {
+    if (ws.roomId) {
+        sendError(ws, 'Вы уже находитесь в комнате');
+        return;
+    }
 
-function handleScoreUpdate(roomId, playerId, score) {
-  const room = rooms.get(roomId);
-  if (!room || room.gameState !== 'playing') return;
+    const roomId = generateRoomId();
+    const room = {
+        id: roomId,
+        players: [{
+            id: ws.clientId,
+            name: data.playerName || 'Игрок',
+            avatar: data.avatar || 'cat.png',
+            score: 0,
+            ws: ws
+        }],
+        timer: null,
+        duration: GAME_DURATION,
+        timeLeft: GAME_DURATION,
+        status: 'waiting' // waiting, playing, finished
+    };
 
-  const player = room.players.find(p => p.playerId === playerId);
-  if (!player) return;
+    rooms.set(roomId, room);
+    ws.roomId = roomId;
+    ws.playerName = data.playerName;
+    ws.avatar = data.avatar;
 
-  player.score = score;
-
-  // Отправляем обновление обоим игрокам
-  room.players.forEach(p => {
-    if (p.ws.readyState === WebSocket.OPEN) {
-      p.ws.send(JSON.stringify({
-        type: 'score_update',
-        playerId: playerId,
-        score: score,
+    console.log(`Создана комната: ${roomId}`);
+    
+    // Отправляем ответ создателю комнаты
+    ws.send(JSON.stringify({
+        type: 'room_created',
         roomId: roomId
-      }));
-    }
-  });
-}
-
-function endGame(roomId) {
-  const room = rooms.get(roomId);
-  if (!room) return;
-
-  room.gameState = 'finished';
-  const [player1, player2] = room.players;
-
-  const result = {
-    winner: player1.score > player2.score ? player1.playerId :
-      player2.score > player1.score ? player2.playerId : 'draw',
-    player1Score: player1.score,
-    player2Score: player2.score,
-  };
-
-  room.players.forEach(player => {
-    player.ws.send(JSON.stringify({
-      type: 'game_result',
-      ...result,
-      isWinner: result.winner === player.playerId,
-      isDraw: result.winner === 'draw',
     }));
-  });
-
-  setTimeout(() => {
-    rooms.delete(roomId);
-    console.log(`Комната ${roomId} удалена`);
-  }, 30000);
 }
 
-function removePlayerFromRooms(ws) {
-  rooms.forEach((room, roomId) => {
-    room.players = room.players.filter(player => player.ws !== ws);
-    if (room.players.length === 0) {
-      rooms.delete(roomId);
-    } else if (room.players.length === 1 && room.gameState === 'playing') {
-      // Если один игрок отключился во время игры
-      const remainingPlayer = room.players[0];
-      remainingPlayer.ws.send(JSON.stringify({
-        type: 'game_result',
-        isWinner: true,
-        isDraw: false,
-        player1Score: remainingPlayer.score,
-        player2Score: 0
-      }));
-
-      if (room.timerInterval) {
-        clearInterval(room.timerInterval);
-      }
-      rooms.delete(roomId);
+// Присоединение к комнате
+function handleJoinRoom(ws, data) {
+    if (ws.roomId) {
+        sendError(ws, 'Вы уже находитесь в комнате');
+        return;
     }
-  });
+
+    const roomId = data.roomId;
+    const room = rooms.get(roomId);
+
+    if (!room) {
+        sendError(ws, 'Комната не найдена');
+        return;
+    }
+
+    if (room.players.length >= 2) {
+        sendError(ws, 'Комната уже заполнена');
+        return;
+    }
+
+    ws.roomId = roomId;
+    ws.playerName = data.playerName;
+    ws.avatar = data.avatar;
+
+    // Добавляем игрока в комнату
+    room.players.push({
+        id: ws.clientId,
+        name: data.playerName || 'Игрок',
+        avatar: data.avatar || 'cat.png',
+        score: 0,
+        ws: ws
+    });
+
+    console.log(`Игрок ${data.playerName} присоединился к комнате ${roomId}`);
+
+    // Уведомляем всех игроков о присоединении
+    broadcastToRoom(roomId, {
+        type: 'opponent_joined',
+        opponent: {
+            name: data.playerName,
+            avatar: data.avatar,
+            playerId: ws.clientId
+        }
+    });
+
+    // Начинаем игру, если комната заполнена
+    if (room.players.length === 2) {
+        startGame(room);
+    }
 }
 
-setInterval(() => {
-  console.log('Keep-alive');
-}, 300000); // Каждые 5 минут
+// Начало игры
+function startGame(room) {
+    room.status = 'playing';
+    room.timeLeft = room.duration;
 
-const PORT = process.env.PORT || 10000;
-server.listen(PORT, '0.0.0.0', () => { // Слушаем все интерфейсы
-  console.log(`Сервер запущен на порту ${PORT}`);
+    console.log(`Начало игры в комнате ${room.id}`);
+
+    // Уведомляем всех игроков о начале игры
+    broadcastToRoom(room.id, {
+        type: 'game_start',
+        duration: room.duration
+    });
+
+    // Запускаем таймер игры
+    room.timer = setInterval(() => {
+        room.timeLeft--;
+
+        // Отправляем обновление времени всем игрокам
+        broadcastToRoom(room.id, {
+            type: 'timer_update',
+            timeLeft: room.timeLeft
+        });
+
+        // Завершаем игру, когда время вышло
+        if (room.timeLeft <= 0) {
+            endGame(room);
+        }
+    }, 1000);
+}
+
+// Обновление счета игрока
+function handleScoreUpdate(ws, data) {
+    const room = rooms.get(ws.roomId);
+    if (!room || room.status !== 'playing') return;
+
+    // Находим игрока в комнате и обновляем его счет
+    const player = room.players.find(p => p.id === ws.clientId);
+    if (player) {
+        player.score = data.score;
+
+        // Отправляем обновление счета оппоненту
+        const opponent = room.players.find(p => p.id !== ws.clientId);
+        if (opponent && opponent.ws.readyState === WebSocket.OPEN) {
+            opponent.ws.send(JSON.stringify({
+                type: 'score_update',
+                playerId: ws.clientId,
+                score: data.score
+            }));
+        }
+    }
+}
+
+// Завершение игры
+function endGame(room) {
+    clearInterval(room.timer);
+    room.status = 'finished';
+
+    console.log(`Игра завершена в комнате ${room.id}`);
+
+    // Определяем победителя
+    const player1 = room.players[0];
+    const player2 = room.players[1];
+    let result;
+
+    if (player1.score > player2.score) {
+        result = {
+            isDraw: false,
+            winnerId: player1.id,
+            player1Score: player1.score,
+            player2Score: player2.score
+        };
+    } else if (player2.score > player1.score) {
+        result = {
+            isDraw: false,
+            winnerId: player2.id,
+            player1Score: player1.score,
+            player2Score: player2.score
+        };
+    } else {
+        result = {
+            isDraw: true,
+            player1Score: player1.score,
+            player2Score: player2.score
+        };
+    }
+
+    // Отправляем результат всем игрокам
+    broadcastToRoom(room.id, {
+        type: 'game_result',
+        ...result
+    });
+
+    // Через 30 секунд удаляем комнату
+    setTimeout(() => {
+        rooms.delete(room.id);
+        console.log(`Комната ${room.id} удалена`);
+    }, 30000);
+}
+
+// Обработка результата игры от клиента
+function handleGameResult(ws, data) {
+    const room = rooms.get(ws.roomId);
+    if (!room) return;
+
+    // Можно добавить дополнительную логику проверки результатов
+    console.log(`Результат игры в комнате ${room.id} подтвержден`);
+}
+
+// Обработка отключения клиента
+function handleDisconnect(ws) {
+    if (!ws.roomId) return;
+
+    const room = rooms.get(ws.roomId);
+    if (!room) return;
+
+    // Удаляем игрока из комнаты
+    room.players = room.players.filter(p => p.id !== ws.clientId);
+
+    // Если в комнате остался 1 игрок, уведомляем его о выходе соперника
+    if (room.players.length === 1) {
+        const remainingPlayer = room.players[0];
+        if (remainingPlayer.ws.readyState === WebSocket.OPEN) {
+            remainingPlayer.ws.send(JSON.stringify({
+                type: 'opponent_left'
+            }));
+        }
+    }
+
+    // Если комната пуста, удаляем ее
+    if (room.players.length === 0) {
+        clearInterval(room.timer);
+        rooms.delete(room.id);
+        console.log(`Комната ${room.id} удалена (нет игроков)`);
+    }
+}
+
+// Отправка сообщения всем в комнате
+function broadcastToRoom(roomId, message) {
+    const room = rooms.get(roomId);
+    if (!room) return;
+
+    room.players.forEach(player => {
+        if (player.ws.readyState === WebSocket.OPEN) {
+            player.ws.send(JSON.stringify(message));
+        }
+    });
+}
+
+// Отправка ошибки клиенту
+function sendError(ws, message) {
+    if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+            type: 'error',
+            message: message
+        }));
+    }
+}
+
+
+// Запуск сервера
+server.listen(PORT, () => {
+    console.log(`Сервер запущен на порту ${PORT}`);
 });
