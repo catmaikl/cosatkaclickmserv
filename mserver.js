@@ -3,10 +3,31 @@ const WebSocket = require('ws');
 const http = require('http');
 const path = require('path');
 const crypto = require('crypto');
+const cors = require('cors'); // Добавляем пакет CORS
 
 const app = express();
 const server = http.createServer(app);
-const wss = new WebSocket.Server({ server });
+
+// Настройки CORS для WebSocket
+const wss = new WebSocket.Server({ 
+    server,
+    verifyClient: (info, done) => {
+        // Разрешаем подключения с любых origin (для разработки)
+        done(true);
+    }
+});
+
+// Настройки CORS для Express
+const corsOptions = {
+    origin: 'https://cosatka-clickgame-277.netlify.app/', // На продакшене замените на конкретные домены
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+};
+
+app.use(cors(corsOptions)); // Применяем CORS middleware
+
+// Обработка preflight запросов
+app.options('*', cors(corsOptions));
 
 // Конфигурация сервера
 const PORT = process.env.PORT || 10000;
