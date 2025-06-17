@@ -18,6 +18,13 @@ function generateRoomId() {
 wss.on('connection', (ws) => {
   console.log('Новое подключение');
 
+  // Отправка ping каждые 30 секунд
+  const pingInterval = setInterval(() => {
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.ping();
+    }
+  }, 30000);
+
   ws.on('message', (message) => {
     try {
       const data = JSON.parse(message);
@@ -28,6 +35,7 @@ wss.on('connection', (ws) => {
   });
 
   ws.on('close', () => {
+    clearInterval(pingInterval);
     console.log('Клиент отключился');
     removePlayerFromRooms(ws);
   });
@@ -242,7 +250,11 @@ function removePlayerFromRooms(ws) {
   });
 }
 
+setInterval(() => {
+  console.log('Keep-alive');
+}, 300000); // Каждые 5 минут
+
 const PORT = process.env.PORT || 10000;
-server.listen(PORT, () => {
+server.listen(PORT, '0.0.0.0', () => { // Слушаем все интерфейсы
   console.log(`Сервер запущен на порту ${PORT}`);
 });
