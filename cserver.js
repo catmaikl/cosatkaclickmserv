@@ -644,7 +644,7 @@ server.on('request', (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 8087;
+const PORT = process.env.PORT || 10000;
 // Запуск сервера
 server.listen(PORT, '0.0.0.0', () => {
   console.log('Server started on port 8080');
