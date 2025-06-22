@@ -633,6 +633,17 @@ function calculateBattleReward(totalScore) {
   return Math.floor(50 + totalScore * 0.1);
 }
 
+/ Добавьте HTTP-эндпоинт для Render
+server.on('request', (req, res) => {
+  if (req.url === '/health') {
+    res.writeHead(200);
+    res.end('OK');
+  } else {
+    res.writeHead(404);
+    res.end('Not Found');
+  }
+});
+
 const PORT = process.env.PORT || 8087;
 // Запуск сервера
 server.listen(PORT, '0.0.0.0', () => {
