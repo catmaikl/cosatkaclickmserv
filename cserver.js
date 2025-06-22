@@ -633,7 +633,7 @@ function calculateBattleReward(totalScore) {
   return Math.floor(50 + totalScore * 0.1);
 }
 
-/ Добавьте HTTP-эндпоинт для Render
+// Добавьте HTTP-эндпоинт для Render
 server.on('request', (req, res) => {
   if (req.url === '/health') {
     res.writeHead(200);
