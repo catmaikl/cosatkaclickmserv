@@ -397,42 +397,60 @@ app.get('/api/find-user', (req, res) => {
     }
 });
 
+// Добавьте этот код в cserver.js перед server.listen()
+
 app.post('/api/add-friend', (req, res) => {
     const { userId, friendUsername } = req.body;
     
-    // Find friend by username
+    if (!userId || !friendUsername) {
+        return res.status(400).json({ 
+            success: false, 
+            message: "Не указаны userId или friendUsername" 
+        });
+    }
+
+    // Ищем пользователя по username
     let friendId = null;
-    users.forEach((userData, id) => {
-        if (userData.username && userData.username.toLowerCase() === friendUsername.toLowerCase()) {
+    let friendData = null;
+    
+    users.forEach((user, id) => {
+        if (user.username && user.username.toLowerCase() === friendUsername.toLowerCase()) {
             friendId = id;
+            friendData = user;
         }
     });
-    
+
     if (!friendId) {
-        return res.status(404).json({ success: false, message: "User not found" });
+        return res.status(404).json({ 
+            success: false, 
+            message: "Пользователь не найден" 
+        });
     }
-    
-    // Initialize friend requests if not exists
+
+    // Инициализируем хранилище запросов, если нужно
     if (!friendRequests.has(friendId)) {
         friendRequests.set(friendId, new Set());
     }
-    
-    // Add friend request
+
+    // Создаём уникальный ID запроса
     const requestId = uuidv4();
     friendRequests.get(friendId).add(requestId);
-    
-    // Notify the friend if online
-    const friend = users.get(friendId);
-    if (friend && friend.ws.readyState === WebSocket.OPEN) {
-        friend.ws.send(JSON.stringify({
+
+    // Отправляем уведомление другу, если он онлайн
+    if (friendData.ws && friendData.ws.readyState === WebSocket.OPEN) {
+        friendData.ws.send(JSON.stringify({
             type: "friend_request",
             requestId,
             fromUserId: userId,
-            fromUsername: users.get(userId)?.username || "Unknown"
+            fromUsername: users.get(userId)?.username || "Аноним"
         }));
     }
-    
-    res.json({ success: true, requestId });
+
+    res.json({ 
+        success: true,
+        requestId,
+        message: "Запрос в друзья отправлен"
+    });
 });
 
 
