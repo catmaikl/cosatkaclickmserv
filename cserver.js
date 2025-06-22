@@ -634,7 +634,7 @@ function calculateBattleReward(totalScore) {
 }
 
 // Запуск сервера
-server.listen(8080, () => {
+server.listen(8087, () => {
   console.log('Server started on port 8080');
   const WebSocket = require('ws');
   const http = require('http');
@@ -1342,8 +1342,8 @@ server.listen(8080, () => {
   }
 
   // Запуск сервера
-  server.listen(8080, () => {
-    console.log('Server started on port 8080');
+  server.listen(8087, () => {
+    console.log('Server started on port 8087');
   });
 
   // Обработка завершения работы
