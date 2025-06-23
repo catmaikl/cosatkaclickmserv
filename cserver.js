@@ -148,7 +148,7 @@ app.post('/api/friends/remove', (req, res) => {
   res.json({ success: true });
 });
 
-app.get('/api/friends/:username', (req, res) => {
+app.get('/api/friends/:username(\\w+)', (req, res) => {  // Added regex constraint
   const { username } = req.params;
   
   res.json({
