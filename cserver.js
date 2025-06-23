@@ -51,41 +51,67 @@ app.use((err, req, res, next) => {
 app.post('/api/friends/request', (req, res) => {
     const { from, to } = req.body;
     
-    // Валидация входных данных
+    // 1. Валидация
     if (!from || !to) {
-        return res.status(400).json({ 
-            error: 'Необходимо указать отправителя и получателя' 
-        });
+        return res.status(400).json({ error: 'Не указаны участники запроса' });
     }
     
-    // Проверка существования пользователей
+    // 2. Проверка существования пользователей
     if (!users[from] || !users[to]) {
+        const missingUser = !users[from] ? from : to;
+        console.error(`User not found: ${missingUser}`);
+        
+        // Отправляем ошибку через WebSocket отправителю
+        if (users[from]?.ws) {
+            users[from].ws.send(JSON.stringify({
+                type: 'error',
+                message: 'User not found',
+                username: missingUser
+            }));
+        }
+        
         return res.status(404).json({ 
             error: 'User not found',
-            username: !users[from] ? from : to
+            username: missingUser
         });
     }
     
-    // Проверка существующего запроса
-    if (friendships.requests.some(r => r.from === from && r.to === to)) {
-        return res.status(400).json({ 
-            error: 'Request already sent' 
-        });
+    // 3. Проверка дублирования запроса
+    const existingRequest = friendships.requests.find(r => 
+        r.from === from && r.to === to
+    );
+    
+    if (existingRequest) {
+        return res.status(400).json({ error: 'Запрос уже отправлен' });
     }
     
+    // 4. Создание запроса
     const requestId = uuid.v4();
     friendships.requests.push({ from, to, id: requestId });
     
-    // Уведомление получателя, если онлайн
-    if (users[to] && users[to].ws) {
-        users[to].ws.send(JSON.stringify({
+    // 5. Уведомление получателя
+    const recipient = users[to];
+    if (recipient?.ws) {
+        recipient.ws.send(JSON.stringify({
             type: 'friend_request',
             from,
-            requestId
+            requestId,
+            timestamp: Date.now()
         }));
+        
+        console.log(`Request sent to ${to} (online)`);
+    } else {
+        console.log(`User ${to} is offline - request will be delivered on connection`);
     }
     
-    res.json({ success: true, requestId });
+    // 6. Ответ отправителю
+    res.json({ 
+        success: true, 
+        requestId,
+        recipientOnline: !!recipient?.ws
+    });
+    
+    console.log(`Friend request from ${from} to ${to} created`);
 });
 
 app.post('/api/friends/accept', (req, res) => {
