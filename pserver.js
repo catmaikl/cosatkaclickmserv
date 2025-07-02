@@ -140,6 +140,10 @@ function handleDisconnect(playerId) {
   delete playerSessions[playerId];
 }
 
+function generateRoomId() {
+  return Math.random().toString(36).substr(2, 9);
+}
+
 function createRoom(playerId, roomName) {
   const roomId = generateRoomId();
   const room = {
