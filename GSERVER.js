@@ -18,7 +18,6 @@ const mongooseOptions = {
   retryReads: true,
   heartbeatFrequencyMS: 10000,
   waitQueueTimeoutMS: 15000,
-  serverSelectionTryOnce: false // Keep trying to connect
 };
 
 // Connection events
