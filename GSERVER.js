@@ -6,7 +6,7 @@ const cors = require('cors');
 
 // Подключение к MongoDB
 // Подключение к MongoDB
-const MONGODB_URI = 'mongodb+srv://cat743000:5IN74Ae8JQ1133Rr@cluster0.27kkcmn.mongodb.net/cosatkaclick?retryWrites=true&w=majority';
+const MONGODB_URI = 'mongodb+srv://cat743000:nDPgnE9QiNAKixbD@cluster0.27kkcmn.mongodb.net/cosatkaclick?retryWrites=true&w=majority';
 
 const mongooseOptions = {
   serverSelectionTimeoutMS: 30000,
