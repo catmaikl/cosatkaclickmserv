@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
 const socketIo = require('socket.io');
 const http = require('http');
 const path = require('path');
+const cors = require('cors'); // Add this line
 
 // Модели данных
 const Player = require('./models/Player');
@@ -14,10 +15,20 @@ const LeaderboardEntry = require('./models/LeaderboardEntry');
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server);
 
-const cors = require('cors');
-app.use(cors());
+// Configure CORS for Socket.IO
+const io = socketIo(server, {
+  cors: {
+    origin: "https://cosatka-clickgame-277.netlify.app", // Your game's URL
+    methods: ["GET", "POST"],
+    credentials: true
+  }
+});
+
+// Enable CORS for all routes
+app.use(cors({
+  origin: "https://cosatka-clickgame-277.netlify.app"
+}));
 
 // Проверка загрузки .env
 if (!process.env.MONGODB_URI) {
