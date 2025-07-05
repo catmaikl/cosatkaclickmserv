@@ -16,6 +16,9 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
+const cors = require('cors');
+app.use(cors());
+
 // Проверка загрузки .env
 if (!process.env.MONGODB_URI) {
   console.error('❌ MONGODB_URI not found in .env');
