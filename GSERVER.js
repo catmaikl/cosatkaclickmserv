@@ -16,13 +16,19 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
-// Подключение к MongoDB
-mongoose.connect('mongodb+srv://cat743000:nUMh0sNcLXwoiY6u@cluster0.27kkcmn.mongodb.net/orcaClick?retryWrites=true&w=majority', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-})
-.then(() => console.log('Connected to MongoDB'))
-.catch(err => console.error('MongoDB connection error:', err));
+// Проверка загрузки .env
+if (!process.env.MONGODB_URI) {
+  console.error('❌ MONGODB_URI not found in .env');
+  process.exit(1);
+}
+
+// Подключение к MongoDB (без устаревших опций)
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => console.log('✅ MongoDB connected'))
+  .catch(err => {
+    console.error('❌ MongoDB connection error:', err.message);
+    process.exit(1);
+  });
 
 // Middleware
 app.use(express.json());
