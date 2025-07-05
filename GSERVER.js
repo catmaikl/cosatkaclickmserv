@@ -17,7 +17,7 @@ const server = http.createServer(app);
 const io = socketIo(server);
 
 // Подключение к MongoDB
-mongoose.connect('mongodb+srv://cat743000:nUMh0sNcLXwoiY6u@cluster0.27kkcmn.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0', {
+mongoose.connect('MONGODB_URI=mongodb+srv://cat743000:nUMh0sNcLXwoiY6u@cluster0.27kkcmn.mongodb.net/orcaClick?retryWrites=true&w=majority', {
   useNewUrlParser: true,
   useUnifiedTopology: true
 })
