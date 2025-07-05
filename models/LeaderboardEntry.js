@@ -8,4 +8,7 @@ const leaderboardEntrySchema = new mongoose.Schema({
   updatedAt: { type: Date, default: Date.now }
 }, { timestamps: true });
 
+leaderboardEntrySchema.index({ score: -1 });
+leaderboardEntrySchema.index({ level: -1 });
+
 module.exports = mongoose.model('LeaderboardEntry', leaderboardEntrySchema);
