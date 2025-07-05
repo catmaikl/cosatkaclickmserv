@@ -18,4 +18,8 @@ const battleSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
+battleSchema.index({ battleId: 1 });
+battleSchema.index({ status: 1 });
+battleSchema.index({ 'players.userId': 1 });
+
 module.exports = mongoose.model('Battle', battleSchema);
