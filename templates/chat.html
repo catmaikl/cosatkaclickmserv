@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+
+{% block title %}Чат с друзьями{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="sidebar">
+        <h2>Друзья</h2>
+        <ul class="friend-list" id="friend-list">
+            {% for friend in friends %}
+            <li class="friend-item" onclick="selectFriend('{{ friend.username }}')">
+                {{ friend.username }}
+            </li>
+            {% endfor %}
+        </ul>
+        <div style="margin-top: 20px;">
+            <input type="text" id="new-friend" placeholder="Имя пользователя">
+            <button onclick="addFriend()">Добавить друга</button>
+        </div>
+    </div>
+    <div class="main-content">
+        <div class="chat-header" id="chat-header">
+            Выберите друга для общения
+        </div>
+        <div class="chat-messages" id="chat-messages"></div>
+        <div class="chat-input">
+            <input type="text" id="message-input" placeholder="Введите сообщение..." disabled>
+            <button id="send-button" onclick="sendMessage()" disabled>Отправить</button>
+            <label for="file-upload" style="margin-left: 10px; cursor: pointer;">
+                <i class="fas fa-paperclip" style="font-size: 20px;"></i>
+            </label>
+            <input type="file" id="file-upload" style="display: none;">
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let currentFriend = null;
+
+    // Выбор друга для чата
+    function selectFriend(username) {
+        currentFriend = username;
+        document.getElementById('chat-header').textContent = `Чат с ${username}`;
+        document.getElementById('message-input').disabled = false;
+        document.getElementById('send-button').disabled = false;
+
+        // Загрузка истории сообщений
+        fetch(`/get_messages?friend=${username}`)
+            .then(response => response.json())
+            .then(messages => {
+                const chatMessages = document.getElementById('chat-messages');
+                chatMessages.innerHTML = '';
+
+                messages.forEach(msg => {
+                    const messageElement = document.createElement('div');
+                    messageElement.className = 'message';
+
+                    const time = new Date(msg.timestamp).toLocaleTimeString();
+
+                    if (msg.is_file) {
+                        messageElement.innerHTML = `
+                            <div>
+                                <span class="message-sender">${msg.sender}</span>
+                                <span class="message-time">${time}</span>
+                            </div>
+                            <div class="message-content">
+                                <a href="/uploads/${msg.content}" class="file-message" download>${msg.content}</a>
+                            </div>
+                        `;
+                    } else {
+                        messageElement.innerHTML = `
+                            <div>
+                                <span class="message-sender">${msg.sender}</span>
+                                <span class="message-time">${time}</span>
+                            </div>
+                            <div class="message-content">${msg.content}</div>
+                        `;
+                    }
+
+                    chatMessages.appendChild(messageElement);
+                });
+
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            });
+    }
+
+    // Отправка сообщения
+    function sendMessage() {
+        const input = document.getElementById('message-input');
+        const message = input.value.trim();
+
+        if (message && currentFriend) {
+            socket.emit('private_message', {
+                to: currentFriend,
+                message: message
+            });
+
+            input.value = '';
+        }
+    }
+
+    // Отправка файла
+    document.getElementById('file-upload').addEventListener('change', function(e) {
+        if (!currentFriend) return;
+
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('to', currentFriend);
+
+        fetch('/upload', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                socket.emit('file_upload', {
+                    to: currentFriend,
+                    filename: data.filename
+                });
+            } else {
+                alert(data.message);
+            }
+            e.target.value = '';
+        });
+    });
+
+    // Обработка нажатия Enter
+    document.getElementById('message-input').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    });
+
+    // Получение новых сообщений
+    socket.on('new_message', function(data) {
+        if (data.from === currentFriend) {
+            const chatMessages = document.getElementById('chat-messages');
+            const messageElement = document.createElement('div');
+            messageElement.className = 'message';
+
+            const time = new Date(data.timestamp).toLocaleTimeString();
+
+            if (data.is_file) {
+                messageElement.innerHTML = `
+                    <div>
+                        <span class="message-sender">${data.from}</span>
+                        <span class="message-time">${time}</span>
+                    </div>
+                    <div class="message-content">
+                        <a href="/uploads/${data.message}" class="file-message" download>${data.message}</a>
+                    </div>
+                `;
+            } else {
+                messageElement.innerHTML = `
+                    <div>
+                        <span class="message-sender">${data.from}</span>
+                        <span class="message-time">${time}</span>
+                    </div>
+                    <div class="message-content">${data.message}</div>
+                `;
+            }
+
+            chatMessages.appendChild(messageElement);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+    });
+
+    // Добавление друга
+    function addFriend() {
+        const friendUsername = document.getElementById('new-friend').value.trim();
+        if (friendUsername) {
+            socket.emit('add_friend', {
+                username: friendUsername
+            });
+            document.getElementById('new-friend').value = '';
+        }
+    }
+
+    // Статус добавления друга
+    socket.on('friend_status', function(data) {
+        alert(data.message);
+        if (data.status === 'success' || data.status === 'info') {
+            location.reload(); // Обновляем список друзей
+        }
+    });
+</script>
+{% endblock %}

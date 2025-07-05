@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Комната {{ code }} | Онлайн чат</title>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 20px;
+        }
+        .room-code {
+            font-weight: bold;
+            color: #2196F3;
+        }
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #eee;
+            border-radius: 4px;
+        }
+        .message {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+        }
+        .message-sender {
+            font-weight: bold;
+            color: #2196F3;
+        }
+        .message-time {
+            font-size: 12px;
+            color: #999;
+            margin-left: 10px;
+        }
+        .message-content {
+            margin-top: 5px;
+        }
+        .input-area {
+            display: flex;
+            gap: 10px;
+        }
+        #message-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        #send-button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        #send-button:hover {
+            background-color: #45a049;
+        }
+        .leave-btn {
+            padding: 5px 10px;
+            background-color: #f44336;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .leave-btn:hover {
+            background-color: #d32f2f;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>Комната: <span class="room-code">{{ code }}</span></h2>
+            <button class="leave-btn" onclick="leaveRoom()">Покинуть комнату</button>
+        </div>
+
+        <div class="chat-container" id="chat-container">
+            {% for msg in messages %}
+            <div class="message">
+                <div>
+                    <span class="message-sender">{{ msg.name }}</span>
+                    <span class="message-time">{{ msg.time if msg.time else '' }}</span>
+                </div>
+                <div class="message-content">{{ msg.message }}</div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="input-area">
+            <input type="text" id="message-input" placeholder="Введите сообщение..." autocomplete="off">
+            <button id="send-button" onclick="sendMessage()">Отправить</button>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+        const room = "{{ code }}";
+
+        // При подключении к комнате
+        socket.on("connect", () => {
+            socket.emit("join-room", room);
+        });
+
+        // Получение сообщений
+        socket.on("message", (data) => {
+            const chatContainer = document.getElementById("chat-container");
+            const messageElement = document.createElement("div");
+            messageElement.classList.add("message");
+
+            const now = new Date();
+            const timeString = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+            messageElement.innerHTML = `
+                <div>
+                    <span class="message-sender">${data.name}</span>
+                    <span class="message-time">${timeString}</span>
+                </div>
+                <div class="message-content">${data.message}</div>
+            `;
+
+            chatContainer.appendChild(messageElement);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        });
+
+        // Отправка сообщения
+        function sendMessage() {
+            const input = document.getElementById("message-input");
+            const message = input.value.trim();
+
+            if (message) {
+                socket.emit("message", {data: message});
+                input.value = "";
+            }
+        }
+
+        // Обработка нажатия Enter
+        document.getElementById("message-input").addEventListener("keypress", (e) => {
+            if (e.key === "Enter") {
+                sendMessage();
+            }
+        });
+
+        // Покинуть комнату
+        function leaveRoom() {
+            window.location.href = "/";
+        }
+    </script>
+</body>
+</html>
