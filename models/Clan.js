@@ -18,4 +18,7 @@ const clanSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
+clanSchema.index({ tag: 1 });
+clanSchema.index({ 'members.userId': 1 });
+
 module.exports = mongoose.model('Clan', clanSchema);
