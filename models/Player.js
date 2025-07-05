@@ -15,4 +15,8 @@ const playerSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
+playerSchema.index({ userId: 1 });
+playerSchema.index({ score: -1 });
+playerSchema.index({ level: -1 });
+
 module.exports = mongoose.model('Player', playerSchema);
