@@ -7,6 +7,12 @@ const http = require('http');
 const path = require('path');
 const cors = require('cors');
 
+// Добавьте в GSERVER.js (временно!)
+const publicIp = require('public-ip');
+(async () => {
+  console.log('Public IP:', await publicIp.v4());
+})();
+
 // Database models
 const Player = require('./models/Player');
 const Clan = require('./models/Clan');
