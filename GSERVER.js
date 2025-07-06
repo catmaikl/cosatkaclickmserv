@@ -7,10 +7,15 @@ const http = require('http');
 const path = require('path');
 const cors = require('cors');
 
-// Добавьте в GSERVER.js (временно!)
-const publicIp = require('public-ip');
+const { publicIpv4 } = require('public-ip');
+
 (async () => {
-  console.log('Public IP:', await publicIp.v4());
+  try {
+    const ip = await publicIpv4();
+    console.log('Public IP:', ip);
+  } catch (err) {
+    console.error('Failed to get IP:', err);
+  }
 })();
 
 // Database models
