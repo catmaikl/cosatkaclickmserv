@@ -7,17 +7,6 @@ const http = require('http');
 const path = require('path');
 const cors = require('cors');
 
-const { publicIpv4 } = require('public-ip');
-
-(async () => {
-  try {
-    const ip = await publicIpv4();
-    console.log('Public IP:', ip);
-  } catch (err) {
-    console.error('Failed to get IP:', err);
-  }
-})();
-
 // Database models
 const Player = require('./models/Player');
 const Clan = require('./models/Clan');
