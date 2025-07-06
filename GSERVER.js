@@ -35,7 +35,11 @@ app.use(cors({
 // MongoDB connection
 mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
-  useUnifiedTopology: true
+  useUnifiedTopology: true,
+  retryWrites: true,
+  w: 'majority',
+  serverSelectionTimeoutMS: 5000,
+  socketTimeoutMS: 30000
 })
 .then(() => console.log('✅ MongoDB connected'))
 .catch(err => {
