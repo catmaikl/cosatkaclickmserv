@@ -7,13 +7,6 @@ const http = require('http');
 const path = require('path');
 const cors = require('cors');
 
-const publicIp = require('public-ip');
-
-(async () => {
-  const ip = await publicIp.publicIpv4(); // Используйте publicIpv4() вместо v4()
-  console.log('IP:', ip);
-})();
-
 // Database models
 const Player = require('./models/Player');
 const Clan = require('./models/Clan');
