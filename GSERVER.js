@@ -7,6 +7,13 @@ const http = require('http');
 const path = require('path');
 const cors = require('cors');
 
+const publicIp = require('public-ip');
+
+(async () => {
+  const ip = await publicIp.v4();
+  console.log('Server IP:', ip); // Этот IP нужно добавить в Atlas
+})();
+
 // Database models
 const Player = require('./models/Player');
 const Clan = require('./models/Clan');
