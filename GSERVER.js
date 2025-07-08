@@ -10,8 +10,8 @@ const cors = require('cors');
 const publicIp = require('public-ip');
 
 (async () => {
-  const ip = await publicIp.v4();
-  console.log('Server IP:', ip); // Этот IP нужно добавить в Atlas
+  const ip = await publicIp.publicIpv4(); // Используйте publicIpv4() вместо v4()
+  console.log('IP:', ip);
 })();
 
 // Database models
