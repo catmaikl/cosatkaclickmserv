@@ -53,6 +53,28 @@ mongoose.connect(process.env.MONGODB_URI, {
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Добавьте этот endpoint для сохранения игры
+app.post('/api/save', authenticateToken, async (req, res) => {
+  try {
+    const { userId, gameData } = req.body;
+    
+    if (req.user.userId !== userId) {
+      return res.status(403).json({ error: 'Неавторизованный доступ' });
+    }
+
+    await Player.findOneAndUpdate(
+      { userId },
+      { $set: gameData },
+      { upsert: true }
+    );
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Ошибка сохранения:', err);
+    res.status(500).json({ error: 'Ошибка сервера' });
+  }
+});
+
 // API Endpoints
 app.get('/api/leaderboard', async (req, res) => {
   try {
@@ -371,6 +393,18 @@ async function findRandomOpponent(socket) {
 
   return newBattle;
 }
+
+// Модифицируйте обработчик socket.io для проверки токена
+io.use((socket, next) => {
+  const token = socket.handshake.auth.token;
+  if (!token) return next(new Error('Токен отсутствует'));
+
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
+    if (err) return next(new Error('Неверный токен'));
+    socket.user = user;
+    next();
+  });
+});
 
 async function startBattle(battleId) {
   const battle = await Battle.findByIdAndUpdate(
