@@ -34,7 +34,7 @@ app.use(cors({
   origin: process.env.CLIENT_URL || "https://cosatka-clickgame-277.netlify.app"
 }));
 
-mongoose.set('debug', true); // Показывает все запросы в консоль
+// mongoose.set('debug', true); // Показывает все запросы в консоль
 
 // MongoDB connection
 mongoose.connect(process.env.MONGODB_URI, {
