@@ -125,7 +125,7 @@ app.get('/api/load/:userId', authenticateToken, async (req, res) => {
 });
 
 // On your server (backend)
-router.get('/clans/my', authenticateUser, async (req, res) => {
+app.get('/clans/my', authenticateUser, async (req, res) => {
   try {
     const clan = await Clan.findOne({ members: req.user.id });
     res.json(clan || {});
