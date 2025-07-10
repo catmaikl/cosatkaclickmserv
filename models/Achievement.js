@@ -5,7 +5,7 @@ const achievementSchema = new mongoose.Schema({
   description: { type: String },
   reward: { type: Number, default: 0 },
   unlocked: { type: Boolean, default: false },
-  userId: { type: mongoose.Schema.Types.Mixed, ref: 'Player' },
+  userId: { type: String, ref: 'Player' },
   unlockedAt: { type: Date }
 }, { timestamps: true });
 
