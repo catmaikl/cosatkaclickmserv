@@ -12,7 +12,7 @@ const gameEventSchema = new mongoose.Schema({
     value: { type: Number }
   }],
   participants: [{
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'Player' },
+    userId: { type: String, ref: 'Player' },
     progress: { type: Number, default: 0 },
     rewardsClaimed: { type: Boolean, default: false }
   }],
