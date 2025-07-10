@@ -34,7 +34,7 @@ app.use(cors({
   origin: process.env.CLIENT_URL || "https://cosatka-clickgame-277.netlify.app"
 }));
 
-// mongoose.set('debug', true); // Показывает все запросы в консоль
+mongoose.set('debug', true); // Показывает все запросы в консоль
 
 // MongoDB connection
 mongoose.connect(process.env.MONGODB_URI, {
@@ -77,6 +77,34 @@ function generateAccessToken(user) {
 function generateRefreshToken(user) {
   return jwt.sign(user, process.env.REFRESH_TOKEN_SECRET);
 }
+
+// Authentication middleware
+const authenticateUser = async (req, res, next) => {
+  try {
+    // Get token from header
+    const token = req.header('Authorization')?.replace('Bearer ', '');
+    
+    if (!token) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    // Verify token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    // Find user
+    const user = await User.findById(decoded._id);
+    if (!user) {
+      return res.status(401).json({ error: 'User not found' });
+    }
+
+    // Attach user to request
+    req.user = user;
+    req.token = token;
+    next();
+  } catch (error) {
+    res.status(401).json({ error: 'Please authenticate' });
+  }
+};
 
 // API для получения токена
 app.post('/api/token', async (req, res) => {
@@ -125,7 +153,7 @@ app.get('/api/load/:userId', authenticateToken, async (req, res) => {
 });
 
 // On your server (backend)
-app.get('/clans/my', authenticateUser, async (req, res) => {
+router.get('/clans/my', authenticateUser, async (req, res) => {
   try {
     const clan = await Clan.findOne({ members: req.user.id });
     res.json(clan || {});
