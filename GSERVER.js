@@ -725,9 +725,16 @@ const activeBattles = {};
 io.on('connection', (socket) => {
   console.log('New client connected');
   
-  // Authenticate socket
-  socket.on('authenticate', async (token) => {
+  // Authenticate socket+6
+  socket.on('authenticate', async (authData) => {
     try {
+      // Проверяем, пришел ли объект или строка
+      const token = typeof authData === 'string' ? authData : authData.token;
+      
+      if (!token) {
+        throw new Error('Token not provided');
+      }
+
       const decoded = jwt.verify(token, JWT_SECRET);
       socket.userId = decoded.userId;
       
