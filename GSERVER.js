@@ -151,7 +151,7 @@ app.post('/api/auth/anonymous', async (req, res) => {
       }).save();
     }
     
-    const accessToken = jwt.sign({ userId }, JWT_SECRET, { expiresIn: '15m' });
+    const accessToken = jwt.sign({ userId }, JWT_SECRET, { expiresIn: '1h' });
     const refreshToken = jwt.sign({ userId }, JWT_SECRET, { expiresIn: '7d' });
     
     user.refreshToken = refreshToken;
@@ -728,7 +728,6 @@ io.on('connection', (socket) => {
   // Authenticate socket+6
   socket.on('authenticate', async (authData) => {
     try {
-      // Проверяем, пришел ли объект или строка
       const token = typeof authData === 'string' ? authData : authData.token;
       
       if (!token) {
@@ -746,7 +745,46 @@ io.on('connection', (socket) => {
       console.log(`User ${decoded.userId} authenticated on socket`);
     } catch (err) {
       console.error('Socket authentication error:', err);
+      
+      // Send specific error message to client
+      if (err.name === 'TokenExpiredError') {
+        socket.emit('authentication_error', {
+          code: 'TOKEN_EXPIRED',
+          message: 'Your session has expired. Please refresh your token.'
+        });
+      } else {
+        socket.emit('authentication_error', {
+          code: 'AUTH_FAILED',
+          message: 'Authentication failed'
+        });
+      }
+      
       socket.disconnect();
+    }
+  });
+
+  // Add this to your socket.io event handlers
+  socket.on('refresh_token', async (refreshToken, callback) => {
+    if (!refreshToken) {
+      return callback({ success: false, error: 'No refresh token provided' });
+    }
+
+    try {
+      const user = await User.findOne({ refreshToken });
+      if (!user) {
+        return callback({ success: false, error: 'Invalid refresh token' });
+      }
+
+      jwt.verify(refreshToken, JWT_SECRET, (err, decoded) => {
+        if (err) {
+          return callback({ success: false, error: 'Invalid refresh token' });
+        }
+
+        const newAccessToken = jwt.sign({ userId: decoded.userId }, JWT_SECRET, { expiresIn: '15m' });
+        callback({ success: true, accessToken: newAccessToken });
+      });
+    } catch (err) {
+      callback({ success: false, error: 'Server error' });
     }
   });
   
