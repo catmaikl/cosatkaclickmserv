@@ -26,7 +26,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// For Socket.IO
 const io = socketio(server, {
   cors: {
     origin: [
@@ -36,7 +35,11 @@ const io = socketio(server, {
     methods: ["GET", "POST"],
     credentials: true
   },
-  path: "/socket.io"  // Explicitly set the path
+  path: "/socket.io", // Must match client path
+  serveClient: false,
+  connectTimeout: 5000,
+  pingTimeout: 5000,
+  pingInterval: 25000
 });
 
 app.use(express.json());
