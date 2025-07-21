@@ -163,39 +163,38 @@ class Room {
 
   // Защита картой
   defend(playerId, cardIndex) {
-    if (this.currentTurn !== playerId || !this.gameStarted) return false;
-    
-    const player = this.players.find(p => p.id === playerId);
-    if (!player) return false;
-    
-    // Проверяем, что игрок защитник
-    const playerIndex = this.players.findIndex(p => p.id === playerId);
-    if (playerIndex !== this.defenderIndex) return false;
-    
-    // Находим первую неотбитую карту
-    const undefendedPair = this.table.find(pair => !pair.defend);
-    if (!undefendedPair) return false;
-    
-    // Проверяем карту
-    const defendingCard = player.cards[cardIndex];
-    if (!defendingCard) return false;
-    
-    if (defendingCard.canBeat(undefendedPair.attack, this.trump.suit)) {
-      // Удаляем карту из руки игрока
-      player.cards.splice(cardIndex, 1);
-      
-      // Устанавливаем защитную карту
-      undefendedPair.defend = defendingCard;
-      
-      // Проверяем, все ли карты отбиты
-      if (this.table.every(pair => pair.defend)) {
-        this.completeRound();
+      if (this.currentTurn !== playerId || !this.gameStarted) return false;
+
+      const player = this.players.find(p => p.id === playerId);
+      if (!player || !player.cards[cardIndex]) return false;
+
+      // Проверяем, что игрок защитник
+      const playerIndex = this.players.findIndex(p => p.id === playerId);
+      if (playerIndex !== this.defenderIndex) return false;
+
+      // Находим первую неотбитую карту
+      const undefendedPair = this.table.find(pair => !pair.defend);
+      if (!undefendedPair) return false;
+
+      // Проверяем карту
+      const defendingCard = player.cards[cardIndex];
+
+      if (defendingCard.canBeat(undefendedPair.attack, this.trump.suit)) {
+          // Удаляем карту из руки игрока
+          player.cards.splice(cardIndex, 1);
+
+          // Устанавливаем защитную карту
+          undefendedPair.defend = defendingCard;
+
+          // Проверяем, все ли карты отбиты
+          if (this.table.every(pair => pair.defend)) {
+              this.completeRound();
+          }
+
+          return true;
       }
-      
-      return true;
-    }
-    
-    return false;
+
+      return false;
   }
 
   // Взять карты
@@ -303,22 +302,22 @@ class Room {
 
   // Получить состояние игры для игрока
   getPlayerState(playerId) {
-    const playerIndex = this.players.findIndex(p => p.id === playerId);
-    if (playerIndex === -1) return null;
-    
-    const opponentIndex = (playerIndex + 1) % this.players.length;
-    const opponent = this.players[opponentIndex];
-    
-    return {
-      yourCards: this.players[playerIndex].cards,
-      opponentCardsCount: opponent.cards.length,
-      table: this.table,
-      trump: this.trump,
-      deckCount: this.deck.length,
-      isAttacker: this.attackerIndex === playerIndex && this.currentTurn === playerId,
-      isDefender: this.defenderIndex === playerIndex && this.currentTurn === playerId,
-      canPass: this.canPass && this.attackerIndex === playerIndex && this.table.length > 0,
-      players: this.players
+      const playerIndex = this.players.findIndex(p => p.id === playerId);
+      if (playerIndex === -1) return null;
+
+      const opponentIndex = (playerIndex + 1) % this.players.length;
+      const opponent = this.players[opponentIndex];
+
+      return {
+          yourCards: this.players[playerIndex].cards,
+          opponentCardsCount: opponent ? opponent.cards.length : 0,
+          table: this.table.filter(pair => pair.attack), // Фильтруем null значения
+          trump: this.trump,
+          deckCount: this.deck.length,
+          isAttacker: this.attackerIndex === playerIndex && this.currentTurn === playerId,
+          isDefender: this.defenderIndex === playerIndex && this.currentTurn === playerId,
+          canPass: this.canPass && this.attackerIndex === playerIndex && this.table.length > 0,
+          players: this.players
     };
   }
 }
@@ -345,17 +344,20 @@ io.on('connection', (socket) => {
   });
   
   // Присоединение к комнате
-  socket.on('join_room', (roomId) => {
-    const room = rooms.get(roomId);
-    if (room && room.players.length < 2) {
-      room.players.push({ id: socket.id, name: `Игрок ${room.players.length + 1}` });
-      socket.join(roomId);
-      
-      socket.emit('room_joined', { 
-        id: room.id, 
-        name: room.name,
-        players: room.players
-      });
+      socket.on('join_room', (roomId, playerName) => {
+        const room = rooms.get(roomId);
+        if (room && room.players.length < 2) {
+            room.players.push({ 
+                id: socket.id, 
+                name: playerName || `Игрок ${room.players.length + 1}` 
+            });
+            socket.join(roomId);
+
+            socket.emit('room_joined', { 
+                id: room.id, 
+                name: room.name,
+                players: room.players
+            });
       
       // Если комната заполнена - начинаем игру
       if (room.players.length === 2) {
