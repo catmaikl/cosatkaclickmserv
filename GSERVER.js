@@ -112,8 +112,25 @@ function verifyToken(token, secret) {
   }
 }
 
+// Middleware для проверки аутентификации
+function authenticateToken(req, res, next) {
+  const token = req.headers.authorization?.split(' ')[1];
+  
+  if (!token) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  
+  const decoded = verifyToken(token, JWT_SECRET);
+  if (!decoded) {
+    return res.status(401).json({ error: 'Invalid token' });
+  }
+  
+  req.user = decoded;
+  next();
+}
+
 // API Routes
-app.post('/auth/anonymous', (req, res) => {
+app.post('/api/auth/anonymous', (req, res) => {
   const { userId, userName } = req.body;
   
   if (!userId) {
@@ -136,7 +153,7 @@ app.post('/auth/anonymous', (req, res) => {
   res.json(tokens);
 });
 
-app.post('/auth/refresh', (req, res) => {
+app.post('/api/auth/refresh', (req, res) => {
   const { refreshToken } = req.body;
   
   if (!refreshToken) {
@@ -160,7 +177,7 @@ app.post('/auth/refresh', (req, res) => {
   res.json(tokens);
 });
 
-app.post('/auth/verify', (req, res) => {
+app.post('/api/auth/verify', (req, res) => {
   const token = req.headers.authorization?.split(' ')[1];
   if (!token) return res.status(401).json({ valid: false });
   
@@ -172,18 +189,8 @@ app.post('/auth/verify', (req, res) => {
   }
 });
 
-app.post('/save', (req, res) => {
-  const token = req.headers.authorization?.split(' ')[1];
+app.post('/api/save', authenticateToken, (req, res) => {
   const { userId, gameData } = req.body;
-  
-  if (!token) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-  
-  const decoded = verifyToken(token, JWT_SECRET);
-  if (!decoded || decoded.userId !== userId) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
   
   const user = users.get(userId);
   if (!user) {
@@ -196,18 +203,8 @@ app.post('/save', (req, res) => {
   res.json({ success: true });
 });
 
-app.get('/load', (req, res) => {
-  const token = req.headers.authorization?.split(' ')[1];
+app.get('/api/load', authenticateToken, (req, res) => {
   const { userId } = req.query;
-  
-  if (!token) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-  
-  const decoded = verifyToken(token, JWT_SECRET);
-  if (!decoded || decoded.userId !== userId) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
   
   const user = users.get(userId);
   if (!user) {
@@ -217,18 +214,8 @@ app.get('/load', (req, res) => {
   res.json(user.gameData || {});
 });
 
-app.post('/leaderboard', (req, res) => {
-  const token = req.headers.authorization?.split(' ')[1];
+app.post('/api/leaderboard', authenticateToken, (req, res) => {
   const { userId, userName, score, level } = req.body;
-  
-  if (!token) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-  
-  const decoded = verifyToken(token, JWT_SECRET);
-  if (!decoded || decoded.userId !== userId) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
   
   // Обновляем или добавляем запись в таблицу лидеров
   const existingIndex = leaderboard.findIndex(entry => entry.userId === userId);
@@ -250,7 +237,7 @@ app.post('/leaderboard', (req, res) => {
   res.json({ success: true });
 });
 
-app.get('/leaderboard', (req, res) => {
+app.get('/api/leaderboard', (req, res) => {
   // Возвращаем топ-100
   const top100 = leaderboard
     .sort((a, b) => b.score - a.score)
@@ -259,18 +246,7 @@ app.get('/leaderboard', (req, res) => {
   res.json(top100);
 });
 
-app.get('/shop/items', (req, res) => {
-  const token = req.headers.authorization?.split(' ')[1];
-  
-  if (!token) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-  
-  const decoded = verifyToken(token, JWT_SECRET);
-  if (!decoded) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-  
+app.get('/api/shop/items', authenticateToken, (req, res) => {
   res.json(shopItems);
 });
 
@@ -391,8 +367,8 @@ io.on('connection', (socket) => {
   });
   
   // Обработчик отключения
-  socket.on('disconnect', () => {
-    console.log('Client disconnected:', socket.id);
+  socket.on('disconnect', (reason) => {
+    console.log('Client disconnected:', socket.id, reason);
     
     // Завершаем все баттлы, где участвовал этот игрок
     for (const [battleId, battle] of activeBattles) {
@@ -440,6 +416,9 @@ function endBattle(battle) {
       message: 'Соперник не найден'
     });
   }
+  
+  // Удаляем баттл из активных
+  activeBattles.delete(battle.battleId);
 }
 
 // Запуск сервера
