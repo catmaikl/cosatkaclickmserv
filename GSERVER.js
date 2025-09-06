@@ -798,4 +798,5 @@ setInterval(() => {
       console.log('Leaderboard cleaned: removed old entries');
     }
   });
+
 }, 24 * 60 * 60 * 1000);
