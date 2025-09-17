@@ -364,4 +364,9 @@ def unlock_achievement(user_id, achievement_id):
 if __name__ == "__main__":
     init_db()
     print("Бот Косатка запущен!")
+    
+    # Удаляем webhook перед запуском polling
+    bot.remove_webhook()
+    time.sleep(1)  # Небольшая пауза
+    
     bot.infinity_polling()
