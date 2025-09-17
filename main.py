@@ -7,7 +7,7 @@ import json
 from datetime import datetime, timedelta
 
 # Настройки бота
-bot = telebot.TeleBot('8047772717:AAEpoHcjU3vaiY-8x1ROdZ5fiBhyiU1VUwg')
+bot = telebot.TeleBot('7976741719:AAHlZVNrXSI84F8HCNVH15Tp_OTtXk9GqV8')
 
 # Инициализация базы данных
 def init_db():
