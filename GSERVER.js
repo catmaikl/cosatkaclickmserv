@@ -615,6 +615,33 @@ app.post("/api/auth/verify", (req, res) => {
   }
 });
 
+// Получение таблицы лидеров
+app.get("/api/leaderboard", async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 100;
+    
+    const leaderboardData = await new Promise((resolve, reject) => {
+      db.all(`SELECT user_id as userId, username as userName, score, level, cps,
+                     last_updated as lastUpdated
+              FROM leaderboard 
+              ORDER BY score DESC 
+              LIMIT ?`, [limit], (err, rows) => {
+        if (err) {
+          console.error("Database error:", err);
+          reject(err);
+        } else {
+          resolve(rows || []);
+        }
+      });
+    });
+
+    res.json(leaderboardData);
+  } catch (error) {
+    console.error("Leaderboard fetch error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 app.post("/api/save", authenticateToken, (req, res) => {
   const { userId, gameData } = req.body;
 
@@ -1080,4 +1107,5 @@ setInterval(() => {
       console.log('Leaderboard cleaned: removed old entries');
     }
   });
+
 }, 24 * 60 * 60 * 1000);
