@@ -1,0 +1,1495 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Косатка Клик: Космическое Приключение</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Comic Sans MS", cursive, sans-serif;
+      }
+
+      body {
+        background: linear-gradient(135deg, #0a0e2a, #1a1f4b, #2d2366);
+        color: #fff;
+        min-height: 100vh;
+        overflow-x: hidden;
+        background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><circle cx="10" cy="10" r="1" fill="white" opacity="0.7"/><circle cx="50" cy="20" r="1" fill="white" opacity="0.5"/><circle cx="80" cy="40" r="1" fill="white" opacity="0.8"/><circle cx="30" cy="70" r="1" fill="white" opacity="0.6"/><circle cx="70" cy="80" r="1" fill="white" opacity="0.9"/></svg>');
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      header {
+        text-align: center;
+        padding: 20px 0;
+        border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        margin-bottom: 30px;
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+      }
+
+      h1 {
+        font-size: 2.8rem;
+        margin-bottom: 10px;
+        background: linear-gradient(90deg, #ff9a9e, #fad0c4, #fad0c4, #a1c4fd);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-shadow: 0 0 10px rgba(255, 154, 158, 0.5);
+      }
+
+      .subtitle {
+        font-size: 1.2rem;
+        color: #a1c4fd;
+        margin-bottom: 15px;
+      }
+
+      .game-area {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        justify-content: center;
+      }
+
+      .main-game {
+        flex: 1;
+        min-width: 300px;
+        background: rgba(10, 14, 42, 0.7);
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        border: 2px solid #4a3f7d;
+      }
+
+      .player-info {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        background: rgba(0, 0, 0, 0.3);
+        padding: 15px;
+        border-radius: 10px;
+        border: 1px solid #4a3f7d;
+      }
+
+      .resource {
+        text-align: center;
+        flex: 1;
+      }
+
+      .resource-label {
+        font-size: 0.9rem;
+        color: #a1c4fd;
+        margin-bottom: 5px;
+      }
+
+      .resource-value {
+        font-size: 1.8rem;
+        font-weight: bold;
+        color: #ff9a9e;
+        text-shadow: 0 0 5px rgba(255, 154, 158, 0.7);
+      }
+
+      .kosatka-area {
+        position: relative;
+        height: 300px;
+        background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="%230d0f2a"/><circle cx="20" cy="20" r="3" fill="%233a3d6b"/><circle cx="60" cy="40" r="5" fill="%233a3d6b"/><circle cx="80" cy="70" r="4" fill="%233a3d6b"/><circle cx="40" cy="80" r="6" fill="%233a3d6b"/></svg>');
+        border-radius: 10px;
+        margin-bottom: 20px;
+        overflow: hidden;
+        cursor: pointer;
+        border: 2px solid #4a3f7d;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .kosatka-img {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-repeat: no-repeat;
+        transition: transform 0.2s;
+      }
+
+      .kosatka-img img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        max-width: 200px;
+        max-height: 200px;
+      }
+
+      .kosatka-area:active .kosatka-img {
+        transform: scale(0.95);
+      }
+
+      .kosatka-click {
+        position: absolute;
+        width: 30px;
+        height: 30px;
+        background: radial-gradient(
+          circle,
+          rgba(255, 215, 0, 0.8) 0%,
+          rgba(255, 140, 0, 0) 70%
+        );
+        border-radius: 50%;
+        pointer-events: none;
+        animation: clickEffect 0.5s forwards;
+      }
+
+      @keyframes clickEffect {
+        0% {
+          transform: scale(0.5);
+          opacity: 1;
+        }
+        100% {
+          transform: scale(2);
+          opacity: 0;
+        }
+      }
+
+      .fish-particle {
+        position: absolute;
+        width: 20px;
+        height: 10px;
+        background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 10"><path d="M0,5 Q10,0 20,5 Q10,10 0,5" fill="%23ff9a9e"/></svg>');
+        background-size: contain;
+        pointer-events: none;
+        animation: fishFloat 3s linear forwards;
+      }
+
+      @keyframes fishFloat {
+        0% {
+          transform: translateY(0) rotate(0deg);
+          opacity: 1;
+        }
+        100% {
+          transform: translateY(-100px) rotate(360deg);
+          opacity: 0;
+        }
+      }
+
+      .upgrades {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+
+      .upgrade {
+        background: rgba(0, 0, 0, 0.3);
+        padding: 15px;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s;
+        border: 1px solid #4a3f7d;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .upgrade:hover {
+        background: rgba(74, 63, 125, 0.3);
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      }
+
+      .upgrade.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .upgrade.disabled:hover {
+        transform: none;
+        background: rgba(0, 0, 0, 0.3);
+      }
+
+      .upgrade-title {
+        font-weight: bold;
+        margin-bottom: 5px;
+        color: #fad0c4;
+      }
+
+      .upgrade-description {
+        font-size: 0.8rem;
+        margin-bottom: 10px;
+        color: #a1c4fd;
+      }
+
+      .upgrade-cost {
+        color: #ff9a9e;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+      }
+
+      .upgrade-cost::before {
+        content: "🐟";
+        margin-right: 5px;
+      }
+
+      .upgrade-owned {
+        color: #a1c4fd;
+        font-size: 0.8rem;
+      }
+
+      .online-players {
+        flex: 0 0 300px;
+        background: rgba(10, 14, 42, 0.7);
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        max-height: 500px;
+        overflow-y: auto;
+        border: 2px solid #4a3f7d;
+      }
+
+      .online-title {
+        text-align: center;
+        margin-bottom: 15px;
+        color: #fad0c4;
+        font-size: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .online-title::before {
+        content: "👥";
+        margin-right: 10px;
+      }
+
+      .players-list {
+        list-style: none;
+      }
+
+      .player-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px;
+        margin-bottom: 10px;
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 8px;
+        border-left: 3px solid #a1c4fd;
+        transition: all 0.3s;
+        cursor: pointer;
+      }
+
+      .player-item:hover {
+        background: rgba(74, 63, 125, 0.3);
+      }
+
+      .player-item.me {
+        border-left: 3px solid #ff9a9e;
+        background: rgba(255, 154, 158, 0.1);
+      }
+
+      .player-name {
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+      }
+
+      .player-name::before {
+        content: "🐱";
+        margin-right: 5px;
+      }
+
+      .player-resources {
+        color: #ff9a9e;
+        display: flex;
+        align-items: center;
+      }
+
+      .player-resources::before {
+        content: "🐟";
+        margin-right: 5px;
+      }
+
+      .notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 20px;
+        background: rgba(161, 196, 253, 0.9);
+        color: #0a0e2a;
+        border-radius: 8px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        transform: translateX(150%);
+        transition: transform 0.3s;
+        z-index: 1000;
+        font-weight: bold;
+        border-left: 4px solid #ff9a9e;
+      }
+
+      .notification.show {
+        transform: translateX(0);
+      }
+
+      .boost-indicator {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: rgba(255, 50, 50, 0.8);
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        animation: pulse 1s infinite;
+        display: flex;
+        align-items: center;
+      }
+
+      .boost-indicator::before {
+        content: "⚡";
+        margin-right: 5px;
+      }
+
+      @keyframes pulse {
+        0% {
+          opacity: 0.7;
+        }
+        50% {
+          opacity: 1;
+        }
+        100% {
+          opacity: 0.7;
+        }
+      }
+
+      .connection-status {
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        padding: 5px 10px;
+        border-radius: 15px;
+        font-size: 0.8rem;
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+      }
+
+      .connection-status::before {
+        content: "🌐";
+        margin-right: 5px;
+      }
+
+      .connected {
+        background: rgba(0, 200, 0, 0.8);
+      }
+
+      .disconnected {
+        background: rgba(200, 0, 0, 0.8);
+      }
+
+      .cat-fact {
+        background: rgba(161, 196, 253, 0.2);
+        padding: 10px;
+        border-radius: 8px;
+        margin-top: 15px;
+        font-size: 0.8rem;
+        border-left: 3px solid #ff9a9e;
+      }
+
+      /* Стили для чата */
+      .chat-container {
+        flex: 0 0 300px;
+        background: rgba(10, 14, 42, 0.7);
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        max-height: 500px;
+        display: flex;
+        flex-direction: column;
+        border: 2px solid #4a3f7d;
+      }
+
+      .chat-title {
+        text-align: center;
+        margin-bottom: 15px;
+        color: #fad0c4;
+        font-size: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .chat-title::before {
+        content: "💬";
+        margin-right: 10px;
+      }
+
+      .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        margin-bottom: 15px;
+        padding: 10px;
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 8px;
+        max-height: 300px;
+      }
+
+      .message {
+        margin-bottom: 10px;
+        padding: 8px;
+        border-radius: 5px;
+        background: rgba(74, 63, 125, 0.3);
+        word-wrap: break-word;
+      }
+
+      .message.system {
+        background: rgba(255, 154, 158, 0.2);
+        font-style: italic;
+        text-align: center;
+      }
+
+      .message.own {
+        background: rgba(161, 196, 253, 0.3);
+      }
+
+      .message-sender {
+        font-weight: bold;
+        color: #fad0c4;
+      }
+
+      .chat-input-container {
+        display: flex;
+        gap: 10px;
+      }
+
+      .chat-input {
+        flex: 1;
+        padding: 10px;
+        border-radius: 5px;
+        border: 1px solid #4a3f7d;
+        background: rgba(0, 0, 0, 0.3);
+        color: white;
+      }
+
+      .chat-send {
+        padding: 10px 15px;
+        border-radius: 5px;
+        border: none;
+        background: #4a3f7d;
+        color: white;
+        cursor: pointer;
+        transition: background 0.3s;
+      }
+
+      .chat-send:hover {
+        background: #5a4f8d;
+      }
+
+      /* Стили для баттлов */
+      .battle-container {
+        background: rgba(10, 14, 42, 0.7);
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        margin-top: 20px;
+        border: 2px solid #4a3f7d;
+      }
+
+      .battle-title {
+        text-align: center;
+        margin-bottom: 15px;
+        color: #fad0c4;
+        font-size: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .battle-title::before {
+        content: "⚔️";
+        margin-right: 10px;
+      }
+
+      .battle-actions {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 15px;
+      }
+
+      .battle-btn {
+        flex: 1;
+        padding: 10px;
+        border-radius: 5px;
+        border: none;
+        background: #4a3f7d;
+        color: white;
+        cursor: pointer;
+        transition: background 0.3s;
+        text-align: center;
+      }
+
+      .battle-btn:hover {
+        background: #5a4f8d;
+      }
+
+      .battle-btn:disabled {
+        background: #3a3f5d;
+        cursor: not-allowed;
+      }
+
+      .battle-log {
+        max-height: 200px;
+        overflow-y: auto;
+        padding: 10px;
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 8px;
+        font-size: 0.9rem;
+      }
+
+      .battle-event {
+        margin-bottom: 5px;
+        padding: 5px;
+        border-radius: 3px;
+        background: rgba(74, 63, 125, 0.3);
+      }
+
+      .battle-event.attack {
+        background: rgba(255, 100, 100, 0.3);
+      }
+
+      .battle-event.defense {
+        background: rgba(100, 100, 255, 0.3);
+      }
+
+      .battle-event.special {
+        background: rgba(255, 200, 100, 0.3);
+      }
+
+      .battle-stats {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+      }
+
+      .battle-stat {
+        text-align: center;
+        flex: 1;
+      }
+
+      .battle-health {
+        height: 10px;
+        background: #333;
+        border-radius: 5px;
+        margin-top: 5px;
+        overflow: hidden;
+      }
+
+      .battle-health-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #ff5e5e, #ff9a9e);
+        border-radius: 5px;
+        transition: width 0.3s;
+      }
+
+      @media (max-width: 768px) {
+        .game-area {
+          flex-direction: column;
+        }
+
+        .online-players,
+        .chat-container {
+          flex: 1;
+          width: 100%;
+        }
+
+        h1 {
+          font-size: 2rem;
+        }
+
+        .player-info {
+          flex-direction: column;
+          gap: 10px;
+        }
+
+        .battle-actions {
+          flex-direction: column;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="connection-status disconnected" id="connectionStatus">
+      Отключен
+    </div>
+    text
+    <div class="container">
+      <header>
+        <h1>Косатка Клик: Космическое Приключение</h1>
+        <p class="subtitle">
+          Помоги космической кошке Косатке собрать как можно больше рыбок!
+        </p>
+      </header>
+
+      <div class="game-area">
+        <div class="main-game">
+          <div class="player-info">
+            <div class="resource">
+              <div class="resource-label">Рыбки</div>
+              <div class="resource-value" id="resources">0</div>
+            </div>
+            <div class="resource">
+              <div class="resource-label">Рыбок/клик</div>
+              <div class="resource-value" id="click-power">1</div>
+            </div>
+            <div class="resource">
+              <div class="resource-label">Рыбок/сек</div>
+              <div class="resource-value" id="auto-power">0</div>
+            </div>
+          </div>
+
+          <div class="kosatka-area" id="kosatka">
+            <div class="kosatka-img">
+              <img src="cat.png" alt="" />
+            </div>
+            <div
+              class="boost-indicator"
+              id="boost-indicator"
+              style="display: none"
+            >
+              БУСТ x2!
+            </div>
+          </div>
+
+          <h2 style="color: #fad0c4; margin-bottom: 10px">
+            Улучшения для Косатки
+          </h2>
+          <div class="upgrades" id="upgrades">
+            <!-- Улучшения будут добавлены через JavaScript -->
+          </div>
+
+          <div class="battle-container">
+            <h2 class="battle-title">Космические Баталии</h2>
+            <div class="battle-stats">
+              <div class="battle-stat">
+                <div>Ваше здоровье</div>
+                <div id="player-health">100/100</div>
+                <div class="battle-health">
+                  <div
+                    class="battle-health-fill"
+                    id="player-health-bar"
+                    style="width: 100%"
+                  ></div>
+                </div>
+              </div>
+              <div class="battle-stat">
+                <div>Противник</div>
+                <div id="opponent-health">100/100</div>
+                <div class="battle-health">
+                  <div
+                    class="battle-health-fill"
+                    id="opponent-health-bar"
+                    style="width: 100%"
+                  ></div>
+                </div>
+              </div>
+            </div>
+            <div class="battle-actions" id="battle-actions">
+              <button class="battle-btn" id="attack-btn">
+                Атака (10 рыбок)
+              </button>
+              <button class="battle-btn" id="special-btn">
+                Супер-удар (25 рыбок)
+              </button>
+              <button class="battle-btn" id="challenge-btn">
+                Вызвать на бой
+              </button>
+            </div>
+            <div class="battle-log" id="battle-log">
+              <div class="battle-event system">
+                Выберите противника из списка и начните битву!
+              </div>
+            </div>
+          </div>
+
+          <div class="cat-fact">
+            <strong>Факт о кошках:</strong> Кошка Косатка получила своё имя за
+            любовь к рыбке и космическим приключениям!
+          </div>
+        </div>
+
+        <div class="online-players">
+          <h2 class="online-title">Космические коты онлайн</h2>
+          <ul class="players-list" id="players-list">
+            <li class="player-item">
+              <span class="player-name">Загрузка...</span>
+              <span class="player-resources">0</span>
+            </li>
+          </ul>
+
+          <div class="cat-fact">
+            <strong>Совет:</strong> Общайтесь с другими космическими котами и
+            соревнуйтесь за звание лучшего рыболова!
+          </div>
+        </div>
+
+        <div class="chat-container">
+          <h2 class="chat-title">Космический Чат</h2>
+          <div class="chat-messages" id="chat-messages">
+            <div class="message system">
+              Добро пожаловать в космический чат!
+            </div>
+          </div>
+          <div class="chat-input-container">
+            <input
+              type="text"
+              class="chat-input"
+              id="chat-input"
+              placeholder="Введите сообщение..."
+              maxlength="200"
+            />
+            <button class="chat-send" id="chat-send">Отпр.</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="notification" id="notification">
+      Новый космический кот присоединился к игре!
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      // Игровые переменные
+      let resources = 0;
+      let clickPower = 1;
+      let autoPower = 0;
+      let boostActive = false;
+      let boostTimeLeft = 0;
+      let playerName = "Кот_" + Math.floor(Math.random() * 1000);
+      let socket = null;
+      let selectedOpponent = null;
+      let inBattle = false;
+      let battleLog = [];
+      let playerHealth = 100;
+      let opponentHealth = 100;
+
+      // Элементы DOM
+      const resourcesEl = document.getElementById("resources");
+      const clickPowerEl = document.getElementById("click-power");
+      const autoPowerEl = document.getElementById("auto-power");
+      const kosatkaEl = document.getElementById("kosatka");
+      const upgradesEl = document.getElementById("upgrades");
+      const playersListEl = document.getElementById("players-list");
+      const notificationEl = document.getElementById("notification");
+      const boostIndicatorEl = document.getElementById("boost-indicator");
+      const connectionStatusEl = document.getElementById("connectionStatus");
+      const chatMessagesEl = document.getElementById("chat-messages");
+      const chatInputEl = document.getElementById("chat-input");
+      const chatSendEl = document.getElementById("chat-send");
+      const battleActionsEl = document.getElementById("battle-actions");
+      const battleLogEl = document.getElementById("battle-log");
+      const attackBtnEl = document.getElementById("attack-btn");
+      const specialBtnEl = document.getElementById("special-btn");
+      const challengeBtnEl = document.getElementById("challenge-btn");
+      const playerHealthEl = document.getElementById("player-health");
+      const opponentHealthEl = document.getElementById("opponent-health");
+      const playerHealthBarEl = document.getElementById("player-health-bar");
+      const opponentHealthBarEl = document.getElementById(
+        "opponent-health-bar"
+      );
+
+      // Улучшения с кошачьей тематикой
+      const upgrades = [
+        {
+          id: 1,
+          name: "Улучшенные когти",
+          description: "Косатка ловит больше рыбок за один клик",
+          cost: 10,
+          power: 1,
+          type: "click",
+          owned: 0,
+        },
+        {
+          id: 2,
+          name: "Автоматическая рыбалка",
+          description: "Косатка ловит рыбок автоматически",
+          cost: 50,
+          power: 1,
+          type: "auto",
+          owned: 0,
+        },
+        {
+          id: 3,
+          name: "Кошачий азарт",
+          description: "Временно удваивает улов рыбок",
+          cost: 100,
+          power: 0,
+          type: "boost",
+          owned: 0,
+        },
+        {
+          id: 4,
+          name: "Космический удочник",
+          description: "Значительно увеличивает автоматический улов",
+          cost: 500,
+          power: 5,
+          type: "auto",
+          owned: 0,
+        },
+        {
+          id: 5,
+          name: "Рыбный магнит",
+          description: "Приманивает в 5 раз больше рыбок",
+          cost: 1000,
+          power: 5,
+          type: "click",
+          owned: 0,
+        },
+        {
+          id: 6,
+          name: "Галактический бустер",
+          description: "Удваивает улов на 30 секунд",
+          cost: 2000,
+          power: 0,
+          type: "boost",
+          owned: 0,
+        },
+        {
+          id: 7,
+          name: "Космический корабль",
+          description: "Косатка может ловить рыбок в дальних галактиках",
+          cost: 5000,
+          power: 10,
+          type: "auto",
+          owned: 0,
+        },
+        {
+          id: 8,
+          name: "Рыбный детектор",
+          description: "Позволяет находить редкие рыбки",
+          cost: 10000,
+          power: 20,
+          type: "click",
+          owned: 0,
+        },
+      ];
+
+      // Случайные кошачьи факты
+      const catFacts = [
+        "Кошки спят около 16 часов в день!",
+        "У кошек более 20 мышц управляют ушами.",
+        "Кошка Косатка установила рекорд по ловле космических рыбок!",
+        "Кошки могут поворачивать уши на 180 градусов.",
+        "Косатка может ловить рыбок даже в невесомости!",
+        "Усы кошкам помогают определять расстояние до объектов.",
+        "Косатка - первая кошка, поймавшая рыбку на Луне!",
+      ];
+
+      // Инициализация игры
+      function initGame() {
+        // Запрос имени игрока
+        playerName =
+          prompt("Введите имя вашего космического кота:", playerName) ||
+          playerName;
+
+        // Подключение к серверу
+        connectToServer();
+
+        // Создание улучшений
+        renderUpgrades();
+
+        // Обработчик клика по Косатке
+        kosatkaEl.addEventListener("click", kosatkaClick);
+
+        // Обработчики чата
+        chatSendEl.addEventListener("click", sendChatMessage);
+        chatInputEl.addEventListener("keypress", (e) => {
+          if (e.key === "Enter") sendChatMessage();
+        });
+
+        // Обработчики баттлов
+        attackBtnEl.addEventListener("click", performAttack);
+        specialBtnEl.addEventListener("click", performSpecialAttack);
+        challengeBtnEl.addEventListener("click", challengeOpponent);
+
+        // Автоматическая добыча каждую секунду
+        setInterval(autoFish, 1000);
+
+        // Обновление бустера каждую секунду
+        setInterval(updateBoost, 1000);
+
+        // Смена фактов о кошках каждые 10 секунд
+        setInterval(changeCatFact, 10000);
+
+        // Обновление интерфейса
+        updateUI();
+      }
+
+      // Подключение к серверу
+      function connectToServer() {
+        try {
+          socket = io();
+
+          socket.on("connect", () => {
+            console.log("Подключен к серверу");
+            connectionStatusEl.textContent = "Подключен";
+            connectionStatusEl.className = "connection-status connected";
+
+            // Отправка информации о себе на сервер
+            socket.emit("player-join", {
+              name: playerName,
+              resources: resources,
+              clickPower: clickPower,
+              autoPower: autoPower,
+            });
+          });
+
+          socket.on("disconnect", () => {
+            console.log("Отключен от сервера");
+            connectionStatusEl.textContent = "Отключен";
+            connectionStatusEl.className = "connection-status disconnected";
+          });
+
+          // Обработчики событий WebSocket
+
+          // Получение списка игроков
+          socket.on("players-list", (players) => {
+            updatePlayersList(players);
+          });
+
+          // Новый игрок присоединился
+          socket.on("player-joined", (player) => {
+            if (player.name !== playerName) {
+              showNotification(
+                `${player.name} присоединился к космической рыбалке!`
+              );
+            }
+          });
+
+          // Игрок вышел из игры
+          socket.on("player-left", (player) => {
+            showNotification(`${player.name} уплыл в другую галактику.`);
+          });
+
+          // Игрок добыл ресурсы
+          socket.on("player-mined", (data) => {
+            console.log(`${data.name} поймал ${data.mined} рыбок`);
+          });
+
+          // Получение сообщения чата
+          socket.on("chat-message", (data) => {
+            addChatMessage(
+              data.sender,
+              data.message,
+              data.sender === playerName
+            );
+          });
+
+          // Вызов на бой
+          socket.on("battle-challenge", (data) => {
+            if (
+              confirm(`${data.challenger} вызывает вас на бой! Принять вызов?`)
+            ) {
+              socket.emit("battle-accept", {
+                challenger: data.challenger,
+                defender: playerName,
+              });
+              startBattle(data.challenger);
+            } else {
+              socket.emit("battle-decline", {
+                challenger: data.challenger,
+                defender: playerName,
+              });
+            }
+          });
+
+          // Бой принят
+          socket.on("battle-accepted", (data) => {
+            showNotification(`${data.defender} принял ваш вызов!`);
+            startBattle(data.defender);
+          });
+
+          // Бой отклонен
+          socket.on("battle-declined", (data) => {
+            showNotification(`${data.defender} отклонил ваш вызов.`);
+          });
+
+          // Получение результата атаки
+          socket.on("battle-attack", (data) => {
+            if (inBattle && data.attacker !== playerName) {
+              receiveAttack(data.damage, data.isSpecial);
+            }
+          });
+
+          // Конец боя
+          socket.on("battle-end", (data) => {
+            endBattle(data.winner, data.loser);
+          });
+        } catch (error) {
+          console.error("Ошибка подключения:", error);
+          connectionStatusEl.textContent = "Ошибка подключения";
+          connectionStatusEl.className = "connection-status disconnected";
+        }
+      }
+
+      // Рендер улучшений
+      function renderUpgrades() {
+        upgradesEl.innerHTML = "";
+
+        upgrades.forEach((upgrade) => {
+          const upgradeEl = document.createElement("div");
+          upgradeEl.className = "upgrade";
+          if (resources < upgrade.cost) {
+            upgradeEl.classList.add("disabled");
+          }
+          upgradeEl.innerHTML = `
+                <div class="upgrade-title">${upgrade.name}</div>
+                <div class="upgrade-description">${upgrade.description}</div>
+                <div class="upgrade-cost">${upgrade.cost} рыбок</div>
+                <div class="upgrade-owned">Куплено: ${upgrade.owned}</div>
+            `;
+
+          upgradeEl.addEventListener("click", () =>
+            purchaseUpgrade(upgrade.id)
+          );
+
+          upgradesEl.appendChild(upgradeEl);
+        });
+      }
+
+      // Обновление списка игроков
+      function updatePlayersList(players) {
+        playersListEl.innerHTML = "";
+
+        if (players.length === 0) {
+          const emptyItem = document.createElement("li");
+          emptyItem.className = "player-item";
+          emptyItem.innerHTML =
+            '<span class="player-name">Нет котов онлайн</span>';
+          playersListEl.appendChild(emptyItem);
+          return;
+        }
+
+        // Сортировка игроков по количеству ресурсов
+        players.sort((a, b) => b.resources - a.resources);
+
+        players.forEach((player) => {
+          const playerEl = document.createElement("li");
+          playerEl.className = "player-item";
+          if (player.name === playerName) {
+            playerEl.classList.add("me");
+          } else {
+            playerEl.addEventListener("click", () => selectOpponent(player));
+          }
+          playerEl.innerHTML = `
+                <span class="player-name">${player.name}</span>
+                <span class="player-resources">${Math.floor(
+                  player.resources
+                )}</span>
+            `;
+
+          playersListEl.appendChild(playerEl);
+        });
+      }
+
+      // Выбор противника
+      function selectOpponent(player) {
+        selectedOpponent = player;
+        challengeBtnEl.textContent = `Вызвать ${player.name}`;
+        challengeBtnEl.disabled = false;
+
+        // Подсветка выбранного игрока
+        document.querySelectorAll(".player-item").forEach((item) => {
+          item.style.background = "";
+        });
+
+        event.currentTarget.style.background = "rgba(255, 154, 158, 0.2)";
+      }
+
+      // Вызов на бой
+      function challengeOpponent() {
+        if (!selectedOpponent) {
+          showNotification("Сначала выберите противника из списка!");
+          return;
+        }
+
+        if (selectedOpponent.name === playerName) {
+          showNotification("Нельзя сражаться с самим собой!");
+          return;
+        }
+
+        if (resources < 10) {
+          showNotification("Нужно минимум 10 рыбок для начала боя!");
+          return;
+        }
+
+        socket.emit("battle-challenge", {
+          challenger: playerName,
+          defender: selectedOpponent.name,
+        });
+
+        addBattleLog("system", `Вы вызвали ${selectedOpponent.name} на бой!`);
+      }
+
+      // Начало боя
+      function startBattle(opponent) {
+        inBattle = true;
+        selectedOpponent = { name: opponent };
+        playerHealth = 100;
+        opponentHealth = 100;
+        battleLog = [];
+
+        addBattleLog("system", `Бой с ${opponent} начался!`);
+        updateBattleUI();
+
+        attackBtnEl.disabled = false;
+        specialBtnEl.disabled = false;
+        challengeBtnEl.disabled = true;
+      }
+
+      // Атака
+      function performAttack() {
+        if (!inBattle || resources < 10) {
+          showNotification("Нужно 10 рыбок для атаки!");
+          return;
+        }
+
+        resources -= 10;
+        updateUI();
+
+        const damage = Math.floor(Math.random() * 15) + 5; // 5-20 урона
+        opponentHealth -= damage;
+
+        if (opponentHealth < 0) opponentHealth = 0;
+
+        addBattleLog("attack", `Вы атаковали и нанесли ${damage} урона!`);
+        updateBattleUI();
+
+        // Отправка атаки на сервер
+        socket.emit("battle-attack", {
+          attacker: playerName,
+          defender: selectedOpponent.name,
+          damage: damage,
+          isSpecial: false,
+        });
+
+        checkBattleEnd();
+      }
+
+      // Супер-атака
+      function performSpecialAttack() {
+        if (!inBattle || resources < 25) {
+          showNotification("Нужно 25 рыбок для супер-атаки!");
+          return;
+        }
+
+        resources -= 25;
+        updateUI();
+
+        const damage = Math.floor(Math.random() * 25) + 15; // 15-40 урона
+        opponentHealth -= damage;
+
+        if (opponentHealth < 0) opponentHealth = 0;
+
+        addBattleLog(
+          "special",
+          `Вы использовали супер-удар и нанесли ${damage} урона!`
+        );
+        updateBattleUI();
+
+        // Отправка атаки на сервер
+        socket.emit("battle-attack", {
+          attacker: playerName,
+          defender: selectedOpponent.name,
+          damage: damage,
+          isSpecial: true,
+        });
+
+        checkBattleEnd();
+      }
+
+      // Получение атаки
+      function receiveAttack(damage, isSpecial) {
+        playerHealth -= damage;
+
+        if (playerHealth < 0) playerHealth = 0;
+
+        const attackType = isSpecial ? "special" : "attack";
+        addBattleLog(
+          attackType,
+          `${selectedOpponent.name} атаковал и нанес вам ${damage} урона!`
+        );
+        updateBattleUI();
+
+        checkBattleEnd();
+      }
+
+      // Проверка окончания боя
+      function checkBattleEnd() {
+        if (playerHealth <= 0) {
+          endBattle(selectedOpponent.name, playerName);
+          socket.emit("battle-end", {
+            winner: selectedOpponent.name,
+            loser: playerName,
+          });
+        } else if (opponentHealth <= 0) {
+          endBattle(playerName, selectedOpponent.name);
+          socket.emit("battle-end", {
+            winner: playerName,
+            loser: selectedOpponent.name,
+          });
+        }
+      }
+
+      // Конец боя
+      function endBattle(winner, loser) {
+        inBattle = false;
+
+        if (winner === playerName) {
+          const reward = 50;
+          resources += reward;
+          addBattleLog("system", `Вы победили и получили ${reward} рыбок!`);
+          showNotification(`Вы победили ${loser} и получили ${reward} рыбок!`);
+        } else {
+          addBattleLog("system", `Вы проиграли бой. Попробуйте еще раз!`);
+          showNotification(`Вы проиграли бой против ${winner}.`);
+        }
+
+        attackBtnEl.disabled = true;
+        specialBtnEl.disabled = true;
+        challengeBtnEl.disabled = false;
+
+        updateUI();
+      }
+
+      // Добавление записи в лог боя
+      function addBattleLog(type, message) {
+        battleLog.push({ type, message });
+
+        if (battleLog.length > 10) {
+          battleLog.shift();
+        }
+
+        battleLogEl.innerHTML = "";
+
+        battleLog.forEach((event) => {
+          const eventEl = document.createElement("div");
+          eventEl.className = `battle-event ${event.type}`;
+          eventEl.textContent = event.message;
+          battleLogEl.appendChild(eventEl);
+        });
+
+        battleLogEl.scrollTop = battleLogEl.scrollHeight;
+      }
+
+      // Обновление интерфейса боя
+      function updateBattleUI() {
+        playerHealthEl.textContent = `${playerHealth}/100`;
+        opponentHealthEl.textContent = `${opponentHealth}/100`;
+
+        playerHealthBarEl.style.width = `${playerHealth}%`;
+        opponentHealthBarEl.style.width = `${opponentHealth}%`;
+      }
+
+      // Отправка сообщения в чат
+      function sendChatMessage() {
+        const message = chatInputEl.value.trim();
+
+        if (message === "") return;
+
+        // Ограничение длины сообщения
+        if (message.length > 200) {
+          showNotification("Сообщение слишком длинное! Максимум 200 символов.");
+          return;
+        }
+
+        // Отправка сообщения на сервер
+        socket.emit("chat-message", {
+          sender: playerName,
+          message: message,
+        });
+
+        // Очистка поля ввода
+        chatInputEl.value = "";
+      }
+
+      // Добавление сообщения в чат
+      function addChatMessage(sender, message, isOwn) {
+        const messageEl = document.createElement("div");
+        messageEl.className = `message ${isOwn ? "own" : ""}`;
+        messageEl.innerHTML = `
+            <span class="message-sender">${sender}:</span> ${message}
+        `;
+
+        chatMessagesEl.appendChild(messageEl);
+        chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
+      }
+
+      // Клик по Косатке
+      function kosatkaClick(e) {
+        // Создание эффекта клика
+        const clickEffect = document.createElement("div");
+        clickEffect.className = "kosatka-click";
+        clickEffect.style.left = e.pageX - kosatkaEl.offsetLeft - 15 + "px";
+        clickEffect.style.top = e.pageY - kosatkaEl.offsetTop - 15 + "px";
+        kosatkaEl.appendChild(clickEffect);
+
+        // Удаление эффекта после анимации
+        setTimeout(() => {
+          kosatkaEl.removeChild(clickEffect);
+        }, 500);
+
+        // Создание рыбки
+        const fish = document.createElement("div");
+        fish.className = "fish-particle";
+        fish.style.left = e.pageX - kosatkaEl.offsetLeft - 10 + "px";
+        fish.style.top = e.pageY - kosatkaEl.offsetTop - 5 + "px";
+        kosatkaEl.appendChild(fish);
+
+        // Удаление рыбки после анимации
+        setTimeout(() => {
+          if (kosatkaEl.contains(fish)) {
+            kosatkaEl.removeChild(fish);
+          }
+        }, 3000);
+
+        // Добавление ресурсов
+        let fishCaught = clickPower;
+        if (boostActive) fishCaught *= 2;
+
+        resources += fishCaught;
+
+        // Отправка на сервер
+        if (socket) {
+          socket.emit("player-mine", {
+            name: playerName,
+            mined: fishCaught,
+          });
+        }
+
+        // Обновление интерфейса
+        updateUI();
+      }
+
+      // Покупка улучшения
+      function purchaseUpgrade(id) {
+        const upgrade = upgrades.find((u) => u.id === id);
+
+        if (!upgrade || resources < upgrade.cost) return;
+
+        resources -= upgrade.cost;
+        upgrade.owned++;
+
+        // Применение улучшения
+        switch (upgrade.type) {
+          case "click":
+            clickPower += upgrade.power;
+            break;
+          case "auto":
+            autoPower += upgrade.power;
+            break;
+          case "boost":
+            activateBoost(upgrade.id === 6 ? 30 : 10); // 30 секунд для галактического бустера
+            break;
+        }
+
+        // Увеличение стоимости улучшения
+        upgrade.cost = Math.floor(upgrade.cost * 1.5);
+
+        // Обновление интерфейса
+        updateUI();
+        renderUpgrades();
+
+        // Отправка на сервер
+        if (socket) {
+          socket.emit("player-update", {
+            name: playerName,
+            resources: resources,
+            clickPower: clickPower,
+            autoPower: autoPower,
+          });
+        }
+      }
+
+      // Активация бустера
+      function activateBoost(duration) {
+        boostActive = true;
+        boostTimeLeft = duration;
+        boostIndicatorEl.style.display = "flex";
+
+        showNotification(
+          `Бустер активирован! Улов удвоен на ${duration} секунд.`
+        );
+      }
+
+      // Обновление бустера
+      function updateBoost() {
+        if (boostActive) {
+          boostTimeLeft--;
+
+          if (boostTimeLeft <= 0) {
+            boostActive = false;
+            boostIndicatorEl.style.display = "none";
+            showNotification("Действие бустера закончилось.");
+          } else {
+            boostIndicatorEl.textContent = `БУСТ x2! (${boostTimeLeft}с)`;
+          }
+        }
+      }
+
+      // Автоматическая добыча
+      function autoFish() {
+        if (autoPower > 0) {
+          let fishCaught = autoPower;
+          if (boostActive) fishCaught *= 2;
+
+          resources += fishCaught;
+
+          // Отправка на сервер
+          if (socket) {
+            socket.emit("player-mine", {
+              name: playerName,
+              mined: fishCaught,
+            });
+          }
+
+          updateUI();
+        }
+      }
+
+      // Смена факта о кошках
+      function changeCatFact() {
+        const factEl = document.querySelector(".cat-fact");
+        const randomFact =
+          catFacts[Math.floor(Math.random() * catFacts.length)];
+        factEl.innerHTML = `<strong>Факт о кошках:</strong> ${randomFact}`;
+      }
+
+      // Показать уведомление
+      function showNotification(message) {
+        notificationEl.textContent = message;
+        notificationEl.classList.add("show");
+
+        setTimeout(() => {
+          notificationEl.classList.remove("show");
+        }, 3000);
+      }
+
+      // Обновление интерфейса
+      function updateUI() {
+        resourcesEl.textContent = Math.floor(resources);
+        clickPowerEl.textContent = clickPower * (boostActive ? 2 : 1);
+        autoPowerEl.textContent = autoPower * (boostActive ? 2 : 1);
+
+        // Обновление кнопок баттлов
+        attackBtnEl.disabled = !inBattle || resources < 10;
+        specialBtnEl.disabled = !inBattle || resources < 25;
+      }
+
+      // Запуск игры при загрузке страницы
+      window.addEventListener("load", initGame);
+    </script>
+  </body>
+</html>
