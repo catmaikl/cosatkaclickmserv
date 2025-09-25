@@ -5,7 +5,43 @@ const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server);
+
+// Настройки CORS для Socket.IO
+const io = socketIo(server, {
+  cors: {
+    origin: [
+      "https://cosatka-clickgame-277-p2.netlify.app",
+      "http://localhost:3000",
+      "http://127.0.0.1:3000"
+    ],
+    methods: ["GET", "POST"],
+    credentials: true
+  }
+});
+
+// Настройки CORS для Express
+app.use((req, res, next) => {
+  const allowedOrigins = [
+    'https://cosatka-clickgame-277-p2.netlify.app',
+    'http://localhost:3000',
+    'http://127.0.0.1:3000'
+  ];
+  
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  
+  next();
+});
 
 // Раздаем статические файлы из текущей директории
 app.use(express.static(path.join(__dirname)));
@@ -186,3 +222,4 @@ const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => {
     console.log(`Сервер запущен на порту ${PORT}`);
 });
+
