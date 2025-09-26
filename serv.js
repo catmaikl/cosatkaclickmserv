@@ -8,25 +8,10 @@ const server = http.createServer(app);
 
 // Настройки CORS для Socket.IO
 const io = socketIo(server, {
-  cors: {
-    origin: "*",
-    methods: ["GET", "POST"],
-    credentials: true
-  }
-});
-
-// Настройки CORS для Express
-app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-  
-  next();
+    cors: {
+        origin: "https://cosatka-clickgame-277-p2.netlify.app/",
+        methods: ["GET", "POST"]
+    }
 });
 
 // Раздаем статические файлы из текущей директории
@@ -39,65 +24,67 @@ app.get('/', (req, res) => {
 
 // Данные игроков
 let players = [];
+// Активные бои
+let activeBattles = [];
 
 // Обработка подключений
 io.on('connection', (socket) => {
     console.log('Новый игрок подключился:', socket.id);
-    
+
     // Обработчик присоединения игрока
     socket.on('player-join', (playerData) => {
         // Проверяем, нет ли уже игрока с таким именем
-        const existingPlayer = players.find(p => p.name === playerData.name);
-        
-        if (existingPlayer) {
-            // Если игрок с таким именем уже есть, добавляем суффикс
-            playerData.name = playerData.name + '_' + Math.floor(Math.random() * 100);
+        const existingPlayerIndex = players.findIndex(p => p.name === playerData.name);
+
+        if (existingPlayerIndex !== -1) {
+            // Если игрок с таким именем уже есть, обновляем его данные
+            players[existingPlayerIndex] = {
+                ...players[existingPlayerIndex],
+                id: socket.id,
+                resources: playerData.resources || 0,
+                clickPower: playerData.clickPower || 1,
+                autoPower: playerData.autoPower || 0
+            };
+        } else {
+            // Добавляем нового игрока в список
+            const player = {
+                id: socket.id,
+                name: playerData.name,
+                resources: playerData.resources || 0,
+                clickPower: playerData.clickPower || 1,
+                autoPower: playerData.autoPower || 0,
+                health: 100
+            };
+
+            players.push(player);
         }
-        
-        // Добавляем игрока в список
-        const player = {
-            id: socket.id,
-            name: playerData.name,
-            resources: playerData.resources || 0,
-            clickPower: playerData.clickPower || 1,
-            autoPower: playerData.autoPower || 0,
-            currentSkin: playerData.currentSkin || 'default',
-            ownedSkins: playerData.ownedSkins || ['default']
-        };
-        
-        players.push(player);
-        
+
         // Отправляем обновленный список игроков всем
         io.emit('players-list', players);
-        
+
         // Уведомляем о новом игроке
-        socket.broadcast.emit('player-joined', player);
-        
-        console.log(`Игрок ${player.name} присоединился к игре`);
+        socket.broadcast.emit('player-joined', playerData);
+
+        console.log(`Игрок ${playerData.name} присоединился к игре`);
     });
 
-    // Обработчик смены скина
-    socket.on('skin-change', (data) => {
-        const player = players.find(p => p.name === data.playerName);
-        if (player) {
-            player.currentSkin = data.skinId;
-            socket.broadcast.emit('player-skin-changed', {
-                playerName: data.playerName,
-                skinId: data.skinId
-            });
+    // Обработчик клика по кошке
+    socket.on('player-mine', (data) => {
+        const playerIndex = players.findIndex(p => p.name === data.name);
+        if (playerIndex !== -1) {
+            players[playerIndex].resources += data.mined;
+            io.emit('players-list', players);
         }
     });
 
     // Обработчик обновления данных игрока
     socket.on('player-update', (playerData) => {
-        const player = players.find(p => p.name === playerData.name);
-        if (player) {
-            player.resources = playerData.resources;
-            player.clickPower = playerData.clickPower;
-            player.autoPower = playerData.autoPower;
-            player.currentSkin = playerData.currentSkin;
-            player.ownedSkins = playerData.ownedSkins;
-            
+        const playerIndex = players.findIndex(p => p.name === playerData.name);
+        if (playerIndex !== -1) {
+            players[playerIndex].resources = playerData.resources;
+            players[playerIndex].clickPower = playerData.clickPower;
+            players[playerIndex].autoPower = playerData.autoPower;
+
             io.emit('players-list', players);
         }
     });
@@ -116,9 +103,30 @@ io.on('connection', (socket) => {
 
     // Обработчик вызова на бой
     socket.on('battle-challenge', (data) => {
+        const defender = players.find(p => p.name === data.defender);
+        const challenger = players.find(p => p.name === data.challenger);
+
+        if (!defender || !challenger) {
+            socket.emit('battle-error', { message: 'Игрок не найден' });
+            return;
+        }
+
+        // Проверяем, не участвует ли уже игрок в бою
+        const existingBattle = activeBattles.find(b => 
+            b.players.includes(data.challenger) || b.players.includes(data.defender)
+        );
+
+        if (existingBattle) {
+            socket.emit('battle-error', { message: 'Один из игроков уже в бою' });
+            return;
+        }
+
         const defenderSocket = findSocketByPlayerName(data.defender);
         if (defenderSocket) {
-            defenderSocket.emit('battle-challenge', data);
+            defenderSocket.emit('battle-challenge', {
+                challenger: data.challenger,
+                defender: data.defender
+            });
         }
     });
 
@@ -126,7 +134,26 @@ io.on('connection', (socket) => {
     socket.on('battle-accept', (data) => {
         const challengerSocket = findSocketByPlayerName(data.challenger);
         if (challengerSocket) {
-            challengerSocket.emit('battle-accepted', data);
+            // Создаем новый бой
+            const battle = {
+                id: Date.now().toString(),
+                players: [data.challenger, data.defender],
+                health: {
+                    [data.challenger]: 100,
+                    [data.defender]: 100
+                },
+                turn: data.challenger // Первым ходит вызывающий
+            };
+
+            activeBattles.push(battle);
+
+            challengerSocket.emit('battle-started', battle);
+            socket.emit('battle-started', battle);
+
+            io.emit('chat-message', {
+                sender: 'Система',
+                message: `Начался бой между ${data.challenger} и ${data.defender}!`
+            });
         }
     });
 
@@ -140,36 +167,96 @@ io.on('connection', (socket) => {
 
     // Обработчик атаки в бою
     socket.on('battle-attack', (data) => {
-        const defenderSocket = findSocketByPlayerName(data.defender);
-        if (defenderSocket) {
-            defenderSocket.emit('battle-attack', data);
-        }
-    });
+        const battle = activeBattles.find(b => 
+            b.players.includes(data.attacker) && b.players.includes(data.defender)
+        );
 
-    // Обработчик окончания боя
-    socket.on('battle-end', (data) => {
-        io.emit('battle-end', data);
-        io.emit('chat-message', {
-            sender: 'Система',
-            message: `Бой завершен! ${data.winner} победил ${data.loser}!`
-        });
+        if (!battle) {
+            socket.emit('battle-error', { message: 'Бой не найден' });
+            return;
+        }
+
+        if (battle.turn !== data.attacker) {
+            socket.emit('battle-error', { message: 'Сейчас не ваш ход' });
+            return;
+        }
+
+        // Применяем урон
+        battle.health[data.defender] -= data.damage;
+        if (battle.health[data.defender] < 0) battle.health[data.defender] = 0;
+
+        // Меняем ход
+        battle.turn = data.defender;
+
+        // Отправляем результат атаки обоим игрокам
+        const attackerSocket = findSocketByPlayerName(data.attacker);
+        const defenderSocket = findSocketByPlayerName(data.defender);
+
+        if (attackerSocket) {
+            attackerSocket.emit('battle-update', battle);
+        }
+        if (defenderSocket) {
+            defenderSocket.emit('battle-update', battle);
+        }
+
+        // Проверяем конец боя
+        if (battle.health[data.defender] <= 0) {
+            endBattle(battle, data.attacker, data.defender);
+        }
     });
 
     // Обработчик отключения игрока
     socket.on('disconnect', () => {
         const playerIndex = players.findIndex(p => p.id === socket.id);
-        
+
         if (playerIndex !== -1) {
             const disconnectedPlayer = players[playerIndex];
+
+            // Завершаем все бои с участием отключившегося игрока
+            const playerBattles = activeBattles.filter(b => b.players.includes(disconnectedPlayer.name));
+            playerBattles.forEach(battle => {
+                const winner = battle.players.find(p => p !== disconnectedPlayer.name);
+                if (winner) {
+                    endBattle(battle, winner, disconnectedPlayer.name);
+                }
+            });
+
             players.splice(playerIndex, 1);
-            
+
             io.emit('players-list', players);
-            socket.broadcast.emit('player-left', disconnectedPlayer);
-            
+            io.emit('player-left', disconnectedPlayer);
+
             console.log(`Игрок ${disconnectedPlayer.name} покинул игру`);
         }
     });
 });
+
+// Завершение боя
+function endBattle(battle, winner, loser) {
+    // Награждаем победителя
+    const winnerPlayer = players.find(p => p.name === winner);
+    if (winnerPlayer) {
+        winnerPlayer.resources += 50;
+        winnerPlayer.health = 100;
+    }
+
+    // Восстанавливаем здоровье проигравшего
+    const loserPlayer = players.find(p => p.name === loser);
+    if (loserPlayer) {
+        loserPlayer.health = 100;
+    }
+
+    // Удаляем бой из активных
+    activeBattles = activeBattles.filter(b => b.id !== battle.id);
+
+    // Уведомляем всех о результате
+    io.emit('battle-ended', { winner, loser, battle });
+    io.emit('players-list', players);
+    io.emit('chat-message', {
+        sender: 'Система',
+        message: `Бой завершен! ${winner} победил ${loser} и получил 50 рыбок!`
+    });
+}
 
 // Поиск сокета по имени игрока
 function findSocketByPlayerName(playerName) {
@@ -192,6 +279,7 @@ function isValidMessage(message) {
 
 // Запуск сервера
 const PORT = process.env.PORT || 10000;
-server.listen(PORT, () => {
+server.listen(PORT, '0.0.0.0', () => {
     console.log(`Сервер запущен на порту ${PORT}`);
+    console.log(`Откройте браузер и перейдите по адресу: http://localhost:${PORT}`);
 });
