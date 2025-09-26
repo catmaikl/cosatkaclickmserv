@@ -9,7 +9,7 @@ const server = http.createServer(app);
 // Настройки CORS для Socket.IO
 const io = socketIo(server, {
   cors: {
-    origin: "https://cosatka-clickgame-277-p2.netlify.app/",
+    origin: "https://cosatka-clickgame-277-p2.netlify.app",
     methods: ["GET", "POST"],
     credentials: true
   }
@@ -17,7 +17,7 @@ const io = socketIo(server, {
 
 // Настройки CORS для Express
 app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', 'https://cosatka-clickgame-277-p2.netlify.app/');
+  res.setHeader('Access-Control-Allow-Origin', 'https://cosatka-clickgame-277-p2.netlify.app');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -194,4 +194,5 @@ function isValidMessage(message) {
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => {
     console.log(`Сервер запущен на порту ${PORT}`);
+
 });
