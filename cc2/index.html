@@ -1785,6 +1785,8 @@
 
       // Обновление интерфейса
       function updateUI() {
+        console.log('updateUI вызван, currentSkin:', currentSkin);
+
         if (resourcesEl) resourcesEl.textContent = formatNumber(resources);
         if (clickPowerEl) clickPowerEl.textContent = formatNumber(clickPower);
         if (autoPowerEl) autoPowerEl.textContent = formatNumber(autoPower);
@@ -1792,7 +1794,7 @@
         // Обновление скина
         if (kosatkaSkinEl) {
           kosatkaSkinEl.src =
-            currentSkin === "default" ? "./cat.png" : `./${currentSkin}.png`;
+            currentSkin === "default" ? "/cat.png" : `/${currentSkin}.png`;
         }
 
         // Обновление улучшений
