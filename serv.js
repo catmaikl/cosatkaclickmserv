@@ -9,25 +9,45 @@ const db = new Database(path.join(__dirname, 'data.db'));
 const app = express();
 const server = http.createServer(app);
 
+// Получаем разрешенные домены из переменных окружения
+const allowedOrigins = 'https://cosatkaclick-2.vercel.app'
+
 // Настройки CORS для Socket.IO
 const io = socketIo(server, {
-  cors: {
-    origin: "https://cosatka-clickgame-277-p2.netlify.app", // Разрешаем все источники для тестирования
-    methods: ["GET", "POST"],
-    credentials: true
-  }
+    cors: {
+        origin: function (origin, callback) {
+            // Разрешаем запросы без origin (например, из мобильных приложений или Postman)
+            if (!origin) return callback(null, true);
+            
+            if (allowedOrigins.indexOf(origin) === -1) {
+                const msg = `Домен ${origin} не разрешен политикой CORS.`;
+                console.log(msg);
+                return callback(new Error(msg), false);
+            }
+            return callback(null, true);
+        },
+        methods: ["GET", "POST"],
+        credentials: true
+    }
 });
 
-// Middleware для обработки CORS
+// Улучшенное middleware для обработки CORS
 app.use((req, res, next) => {
-    // В режиме разработки разрешаем все, в продакшн оставляем конкретный origin
-    if (process.env.NODE_ENV !== 'production') {
-        res.setHeader('Access-Control-Allow-Origin', '*');
-    } else {
-        res.setHeader('Access-Control-Allow-Origin', 'https://cosatka-clickgame-277-p2.netlify.app');
+    const origin = req.headers.origin;
+    
+    if (allowedOrigins.includes(origin)) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
     }
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    
+    // Обработка preflight запросов
+    if (req.method === 'OPTIONS') {
+        return res.sendStatus(200);
+    }
+    
     next();
 });
 
@@ -36,6 +56,11 @@ app.use(express.json());
 
 // Статические файлы
 app.use(express.static(path.join(__dirname, 'public')));
+
+// If index.html is in the project root, serve it at '/'
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
 
 // Данные игроков
 let players = [];
@@ -130,7 +155,6 @@ const getDailyTasksStmt = db.prepare('SELECT * FROM daily_tasks');
 const getPlayerTaskStmt = db.prepare('SELECT * FROM player_tasks WHERE playerId = ? AND taskId = ?');
 const insertPlayerTaskStmt = db.prepare('INSERT INTO player_tasks (playerId, taskId, status, lastCompletedAt) VALUES (?, ?, ?, ?)');
 const updatePlayerTaskStmt = db.prepare('UPDATE player_tasks SET status = ?, lastCompletedAt = ? WHERE playerId = ? AND taskId = ?');
-
 
 // Класс баттла
 class Battle {
@@ -384,28 +408,51 @@ io.on('connection', (socket) => {
         console.log('Игрок присоединяется:', playerData);
         
         // Проверяем и корректируем имя если нужно
-        let playerName = playerData.name || "Кот_" + Math.floor(Math.random() * 1000);
-        const existingPlayer = players.find(p => p.name === playerName);
-        
+        let playerName = (playerData && playerData.name) ? String(playerData.name).trim() : null;
+        if (!playerName) {
+            playerName = 'Кот_' + (100 + Math.floor(Math.random() * 900));
+        }
+
+        // If name already exists, append at most one short numeric suffix. If the supplied name already
+        // contains a trailing _NNN-like suffix, strip it before comparing to avoid repeated growth.
+        const stripSuffix = (n) => n.replace(/_[0-9]{2,4}$/, '');
+        const baseName = stripSuffix(playerName);
+        const existingPlayer = players.find(p => stripSuffix(p.name) === baseName);
         if (existingPlayer) {
-            playerName = playerData.name + '_' + Math.floor(Math.random() * 1000);
+            // Append a single short suffix
+            const suffix = 100 + Math.floor(Math.random() * 900);
+            playerName = baseName + '_' + suffix;
         }
         
-        // Создаем объект игрока
-        const player = {
-            id: socket.id,
-            name: playerName,
-            resources: playerData.resources || 0,
-            clickPower: playerData.clickPower || 1,
-            autoPower: playerData.autoPower || 0,
-            currentSkin: playerData.currentSkin || 'default',
-            inBattle: false,
-            battleId: null,
-            joinedAt: new Date()
-        };
-        
-        // Добавляем игрока (в память)
-        players.push(player);
+        // If this socket is already known, update the existing player instead of adding a duplicate
+        const existingIndex = players.findIndex(p => p.id === socket.id);
+        let player;
+        if (existingIndex !== -1) {
+            player = players[existingIndex];
+            const oldName = player.name;
+            player.name = playerName;
+            player.resources = playerData.resources != null ? playerData.resources : player.resources;
+            player.clickPower = playerData.clickPower != null ? playerData.clickPower : player.clickPower;
+            player.autoPower = playerData.autoPower != null ? playerData.autoPower : player.autoPower;
+            player.currentSkin = playerData.currentSkin || player.currentSkin;
+            // keep joinedAt
+            console.log(`Игрок ${oldName} обновил профиль -> ${player.name}`);
+        } else {
+            // Создаем объект игрока
+            player = {
+                id: socket.id,
+                name: playerName,
+                resources: playerData.resources || 0,
+                clickPower: playerData.clickPower || 1,
+                autoPower: playerData.autoPower || 0,
+                currentSkin: playerData.currentSkin || 'default',
+                inBattle: false,
+                battleId: null,
+                joinedAt: new Date()
+            };
+            // Добавляем игрока (в память)
+            players.push(player);
+        }
 
         // Сохраняем / обновляем в БД
         try {
@@ -504,6 +551,21 @@ io.on('connection', (socket) => {
             io.emit('clans-updated');
         } catch (err) {
             console.error('join-clan error', err);
+            cb && cb({ ok: false, error: String(err) });
+        }
+    });
+
+    // Leave clan handler - removes the player from the clan_members table
+    socket.on('leave-clan', (data, cb) => {
+        try {
+            const clanId = parseInt(data.clanId);
+            if (!clanId) return cb && cb({ ok: false, error: 'Invalid clanId' });
+            const del = db.prepare('DELETE FROM clan_members WHERE clanId = ? AND playerId = ?');
+            del.run(clanId, socket.id);
+            cb && cb({ ok: true });
+            io.emit('clans-updated');
+        } catch (err) {
+            console.error('leave-clan error', err);
             cb && cb({ ok: false, error: String(err) });
         }
     });
@@ -939,6 +1001,22 @@ app.get('/battles', (req, res) => {
         })),
         total: battles.length
     });
+});
+
+// Endpoint to get player's position in leaderboard by resources
+app.get('/player-position', (req, res) => {
+    const playerId = req.query.id;
+    try {
+        // get all players ordered by resources desc
+        const rows = db.prepare('SELECT id, name, resources FROM players ORDER BY resources DESC').all();
+        const total = rows.length;
+        const index = rows.findIndex(r => r.id === playerId);
+        if (index === -1) return res.json({ ok: true, position: null, total });
+        return res.json({ ok: true, position: index + 1, total, player: rows[index] });
+    } catch (err) {
+        console.error('player-position error', err);
+        res.status(500).json({ ok: false, error: String(err) });
+    }
 });
 
 // Запуск сервера
