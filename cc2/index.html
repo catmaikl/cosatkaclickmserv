@@ -1,0 +1,2223 @@
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1,user-scalable=0"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&family=Press+Start+2P&display=swap"
+      rel="stylesheet"
+    />
+    <title>Косатка Клик: Космическое Приключение</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Roboto", sans-serif;
+      }
+
+      body {
+        background: linear-gradient(135deg, #0a0e2a, #1a1f4b, #2d2366);
+        color: #fff;
+        min-height: 100vh;
+        overflow-x: hidden;
+        background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><circle cx="10" cy="10" r="1" fill="white" opacity="0.7"/><circle cx="50" cy="20" r="1" fill="white" opacity="0.5"/><circle cx="80" cy="40" r="1" fill="white" opacity="0.8"/><circle cx="30" cy="70" r="1" fill="white" opacity="0.6"/><circle cx="70" cy="80" r="1" fill="white" opacity="0.9"/></svg>');
+        background-color: #1a1f4b;
+      }
+
+      h1,
+      h2,
+      h3 {
+        font-family: "Press Start 2P", cursive;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      header {
+        text-align: center;
+        padding: 20px 0;
+        border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        margin-bottom: 30px;
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+      }
+
+      h1 {
+        font-size: 2.8rem;
+        margin-bottom: 10px;
+        background: linear-gradient(90deg, #ff9a9e, #fad0c4, #fad0c4, #a1c4fd);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-shadow: 0 0 10px rgba(255, 154, 158, 0.5);
+      }
+
+      .subtitle {
+        font-size: 1.2rem;
+        color: #a1c4fd;
+        margin-bottom: 15px;
+      }
+
+      .game-area {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        justify-content: center;
+      }
+
+      .main-game {
+        flex: 1;
+        min-width: 300px;
+        background: rgba(10, 14, 42, 0.7);
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        border: 2px solid #4a3f7d;
+      }
+
+      .player-info {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        background: rgba(0, 0, 0, 0.3);
+        padding: 15px;
+        border-radius: 10px;
+        border: 1px solid #4a3f7d;
+      }
+
+      .resource {
+        text-align: center;
+        flex: 1;
+      }
+
+      .resource-label {
+        font-size: 0.9rem;
+        color: #a1c4fd;
+        margin-bottom: 5px;
+      }
+
+      .resource-value {
+        font-size: 1.8rem;
+        font-weight: bold;
+        color: #ff9a9e;
+        text-shadow: 0 0 5px rgba(255, 154, 158, 0.7);
+      }
+
+      .kosatka-area {
+        position: relative;
+        height: 300px;
+        background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="%230d0f2a"/><circle cx="20" cy="20" r="3" fill="%233a3d6b"/><circle cx="60" cy="40" r="5" fill="%233a3d6b"/><circle cx="80" cy="70" r="4" fill="%233a3d6b"/><circle cx="40" cy="80" r="6" fill="%233a3d6b"/></svg>');
+        border-radius: 10px;
+        margin-bottom: 20px;
+        overflow: hidden;
+        cursor: pointer;
+        border: 2px solid #4a3f7d;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: #0d0f2a;
+      }
+
+      .kosatka-img {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-repeat: no-repeat;
+        transition: transform 0.2s;
+      }
+
+      .kosatka-img img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        max-width: 200px;
+        max-height: 200px;
+        transition: all 0.3s ease;
+      }
+
+      .kosatka-area:active .kosatka-img {
+        transform: scale(0.95);
+      }
+
+      .kosatka-click {
+        position: absolute;
+        width: 30px;
+        height: 30px;
+        background: radial-gradient(
+          circle,
+          rgba(255, 215, 0, 0.8) 0%,
+          rgba(255, 140, 0, 0) 70%
+        );
+        border-radius: 50%;
+        pointer-events: none;
+        animation: clickEffect 0.5s forwards;
+      }
+
+      @keyframes clickEffect {
+        0% {
+          transform: scale(0.5);
+          opacity: 1;
+        }
+        100% {
+          transform: scale(2);
+          opacity: 0;
+        }
+      }
+
+      .fish-particle {
+        position: absolute;
+        width: 20px;
+        height: 10px;
+        background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 10"><path d="M0,5 Q10,0 20,5 Q10,10 0,5" fill="%23ff9a9e"/></svg>');
+        background-size: contain;
+        pointer-events: none;
+        animation: fishFloat 3s linear forwards;
+      }
+
+      @keyframes fishFloat {
+        0% {
+          transform: translateY(0) rotate(0deg);
+          opacity: 1;
+        }
+        100% {
+          transform: translateY(-100px) rotate(360deg);
+          opacity: 0;
+        }
+      }
+
+      .upgrades {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+
+      .upgrade {
+        background: rgba(0, 0, 0, 0.3);
+        padding: 15px;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s;
+        border: 1px solid #4a3f7d;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .upgrade:hover {
+        background: rgba(74, 63, 125, 0.3);
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      }
+
+      .upgrade.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .upgrade.disabled:hover {
+        transform: none;
+        background: rgba(0, 0, 0, 0.3);
+      }
+
+      .upgrade-title {
+        font-weight: bold;
+        margin-bottom: 5px;
+        color: #fad0c4;
+      }
+
+      .upgrade-description {
+        font-size: 0.8rem;
+        margin-bottom: 10px;
+        color: #a1c4fd;
+      }
+
+      .upgrade-cost {
+        color: #ff9a9e;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+      }
+
+      .upgrade-cost::before {
+        content: "🐟";
+        margin-right: 5px;
+      }
+
+      .upgrade-owned {
+        color: #a1c4fd;
+        font-size: 0.8rem;
+      }
+
+      .right-column {
+        flex: 0 0 300px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .online-players {
+        background: rgba(10, 14, 42, 0.7);
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        max-height: 300px;
+        overflow-y: auto;
+        border: 2px solid #4a3f7d;
+      }
+
+      .online-title {
+        text-align: center;
+        margin-bottom: 15px;
+        color: #fad0c4;
+        font-size: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .online-title::before {
+        content: "👥";
+        margin-right: 10px;
+      }
+
+      .players-list {
+        list-style: none;
+      }
+
+      .player-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px;
+        margin-bottom: 10px;
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 8px;
+        border-left: 3px solid #a1c4fd;
+        transition: all 0.3s;
+        cursor: pointer;
+      }
+
+      .player-item:hover {
+        background: rgba(74, 63, 125, 0.3);
+      }
+
+      .player-item.me {
+        border-left: 3px solid #ff9a9e;
+        background: rgba(255, 154, 158, 0.1);
+      }
+
+      .player-name {
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+      }
+
+      .player-name::before {
+        content: "🐱";
+        margin-right: 5px;
+      }
+
+      .player-resources {
+        color: #ff9a9e;
+        display: flex;
+        align-items: center;
+      }
+
+      .player-resources::before {
+        content: "🐟";
+        margin-right: 5px;
+      }
+
+      .notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 20px;
+        background: rgba(161, 196, 253, 0.9);
+        color: #0a0e2a;
+        border-radius: 8px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        transform: translateX(150%);
+        transition: transform 0.3s;
+        z-index: 1000;
+        font-weight: bold;
+        border-left: 4px solid #ff9a9e;
+      }
+
+      .notification.show {
+        transform: translateX(0);
+      }
+
+      .boost-indicator {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: rgba(255, 50, 50, 0.8);
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        animation: pulse 1s infinite;
+        display: flex;
+        align-items: center;
+      }
+
+      .boost-indicator::before {
+        content: "⚡";
+        margin-right: 5px;
+      }
+
+      @keyframes pulse {
+        0% {
+          opacity: 0.7;
+        }
+        50% {
+          opacity: 1;
+        }
+        100% {
+          opacity: 0.7;
+        }
+      }
+
+      .connection-status {
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        padding: 5px 10px;
+        border-radius: 15px;
+        font-size: 0.8rem;
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+      }
+
+      .connection-status::before {
+        content: "🌐";
+        margin-right: 5px;
+      }
+
+      .connected {
+        background: rgba(0, 200, 0, 0.8);
+      }
+
+      .disconnected {
+        background: rgba(200, 0, 0, 0.8);
+      }
+
+      .cat-fact {
+        background: rgba(161, 196, 253, 0.2);
+        padding: 10px;
+        border-radius: 8px;
+        margin-top: 15px;
+        font-size: 0.8rem;
+        border-left: 3px solid #ff9a9e;
+      }
+
+      /* Стили для чата */
+      .chat-container {
+        background: rgba(10, 14, 42, 0.7);
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        max-height: 300px;
+        display: flex;
+        flex-direction: column;
+        border: 2px solid #4a3f7d;
+      }
+
+      .chat-title {
+        text-align: center;
+        margin-bottom: 15px;
+        color: #fad0c4;
+        font-size: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .chat-title::before {
+        content: "💬";
+        margin-right: 10px;
+      }
+
+      .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        margin-bottom: 15px;
+        padding: 10px;
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 8px;
+        max-height: 150px;
+      }
+
+      .message {
+        margin-bottom: 10px;
+        padding: 8px;
+        border-radius: 5px;
+        background: rgba(74, 63, 125, 0.3);
+        word-wrap: break-word;
+      }
+
+      .message.system {
+        background: rgba(255, 154, 158, 0.2);
+        font-style: italic;
+        text-align: center;
+      }
+
+      .message.own {
+        background: rgba(161, 196, 253, 0.3);
+      }
+
+      .message-sender {
+        font-weight: bold;
+        color: #fad0c4;
+      }
+
+      .chat-input-container {
+        display: flex;
+        gap: 10px;
+      }
+
+      .chat-input {
+        flex: 1;
+        padding: 10px;
+        border-radius: 5px;
+        border: 1px solid #4a3f7d;
+        background: rgba(0, 0, 0, 0.3);
+        color: white;
+      }
+
+      .chat-send {
+        padding: 10px 15px;
+        border-radius: 5px;
+        border: none;
+        background: #4a3f7d;
+        color: white;
+        cursor: pointer;
+        transition: background 0.3s;
+      }
+
+      .chat-send:hover {
+        background: #5a4f8d;
+      }
+
+      /* Стили для баттлов */
+      .battle-container {
+        background: rgba(10, 14, 42, 0.7);
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        border: 2px solid #4a3f7d;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 400px;
+      }
+
+      .battle-title {
+        text-align: center;
+        margin-bottom: 15px;
+        color: #fad0c4;
+        font-size: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .battle-title::before {
+        content: "⚔️";
+        margin-right: 10px;
+      }
+
+      .battle-actions {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 15px;
+      }
+
+      .battle-btn {
+        flex: 1;
+        padding: 10px;
+        border-radius: 5px;
+        border: none;
+        background: #4a3f7d;
+        color: white;
+        cursor: pointer;
+        transition: background 0.3s;
+        text-align: center;
+      }
+
+      .battle-btn:hover {
+        background: #5a4f8d;
+      }
+
+      .battle-btn:disabled {
+        background: #3a3f5d;
+        cursor: not-allowed;
+      }
+
+      .battle-log {
+        flex: 1;
+        overflow-y: auto;
+        padding: 10px;
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 8px;
+        font-size: 0.9rem;
+        min-height: 150px;
+      }
+
+      .battle-event {
+        margin-bottom: 5px;
+        padding: 5px;
+        border-radius: 3px;
+        background: rgba(74, 63, 125, 0.3);
+      }
+
+      .battle-event.attack {
+        background: rgba(255, 100, 100, 0.3);
+      }
+
+      .battle-event.defense {
+        background: rgba(100, 100, 255, 0.3);
+      }
+
+      .battle-event.special {
+        background: rgba(255, 200, 100, 0.3);
+      }
+
+      .battle-stats {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+      }
+
+      .battle-stat {
+        text-align: center;
+        flex: 1;
+      }
+
+      .battle-health {
+        height: 10px;
+        background: #333;
+        border-radius: 5px;
+        margin-top: 5px;
+        overflow: hidden;
+      }
+
+      .battle-health-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #ff5e5e, #ff9a9e);
+        border-radius: 5px;
+        transition: width 0.3s;
+      }
+
+      /* Стили для скинов */
+      .skins-container {
+        background: rgba(10, 14, 42, 0.7);
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        margin-top: 20px;
+        border: 2px solid #4a3f7d;
+      }
+
+      .skins-title {
+        text-align: center;
+        margin-bottom: 15px;
+        color: #fad0c4;
+        font-size: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .skins-title::before {
+        content: "🎨";
+        margin-right: 10px;
+      }
+
+      .skins-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 15px;
+      }
+
+      .skin-card {
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 10px;
+        padding: 15px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+        border: 2px solid #4a3f7d;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .skin-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      }
+
+      .skin-card.selected {
+        border-color: #ff9a9e;
+        background: rgba(255, 154, 158, 0.1);
+      }
+
+      .skin-card.owned:not(.selected):hover {
+        border-color: #a1c4fd;
+      }
+
+      .skin-card.locked {
+        cursor: not-allowed;
+        opacity: 0.6;
+      }
+
+      .skin-card.locked:hover {
+        transform: none;
+        box-shadow: none;
+      }
+
+      .skin-preview {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 10px;
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        border-radius: 10px;
+      }
+
+      .skin-name {
+        font-weight: bold;
+        margin-bottom: 5px;
+        color: #fad0c4;
+      }
+
+      .skin-description {
+        font-size: 0.7rem;
+        margin-bottom: 10px;
+        color: #a1c4fd;
+        min-height: 30px;
+      }
+
+      .skin-cost {
+        color: #ff9a9e;
+        font-size: 0.8rem;
+        display: flex;
+        align-items: center;
+      }
+
+      .skin-cost::before {
+        content: "🐟";
+        margin-right: 5px;
+      }
+
+      .skin-owned {
+        color: #a1c4fd;
+        font-size: 0.7rem;
+      }
+
+      .skin-locked {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0, 0, 0, 0.8);
+        padding: 5px 10px;
+        border-radius: 5px;
+        font-size: 0.7rem;
+        color: #ff9a9e;
+      }
+
+      @media (max-width: 768px) {
+        .game-area {
+          flex-direction: column;
+        }
+
+        .right-column {
+          flex: 1;
+          width: 100%;
+        }
+
+        h1 {
+          font-size: 2rem;
+        }
+
+        .player-info {
+          flex-direction: column;
+          gap: 10px;
+        }
+
+        .battle-actions {
+          flex-direction: column;
+        }
+
+        .skins-grid {
+          grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        }
+      }
+
+      .audio-controls {
+        /* position: fixed;
+        bottom: 20px;
+        left: 20px; */
+        display: flex;
+      }
+
+      .audio-btn {
+        background: rgba(74, 63, 125, 0.8);
+        border: none;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        color: white;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        transition: all 0.3s;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+      }
+
+      .audio-btn:hover {
+        background: rgba(90, 79, 141, 0.9);
+        transform: scale(1.1);
+      }
+
+      .audio-btn.muted {
+        background: rgba(255, 100, 100, 0.8);
+      }
+
+      .volume-slider {
+        width: 100px;
+        background: rgba(0, 0, 0, 0.5);
+        border-radius: 10px;
+        padding: 5px;
+      }
+
+      .audio-panel {
+        background: rgba(10, 14, 42, 0.9);
+        border-radius: 15px;
+        padding: 15px;
+        border: 2px solid #4a3f7d;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+      }
+
+      @media (max-width: 768px) {
+        .audio-controls {
+          bottom: 10px;
+          left: 10px;
+          flex-direction: column;
+        }
+
+        .audio-panel {
+          padding: 10px;
+        }
+      }
+
+      /* Стили для эффекта клика */
+      .click-effect {
+        position: absolute;
+        font-family: "Press Start 2P", cursive;
+        font-size: 1rem;
+        color: #ff9a9e;
+        text-shadow: 0 0 5px rgba(255, 154, 158, 0.7);
+        pointer-events: none;
+        z-index: 100;
+        animation: floatUp 1s ease-out forwards;
+      }
+
+      @keyframes floatUp {
+        0% {
+          transform: translateY(0) scale(1);
+          opacity: 1;
+        }
+        100% {
+          transform: translateY(-50px) scale(1.2);
+          opacity: 0;
+        }
+      }
+
+      /* Стили для улучшений */
+      .upgrade-name {
+        font-weight: bold;
+        margin-bottom: 5px;
+        color: #fad0c4;
+      }
+
+      .upgrade-btn {
+        width: 100%;
+        padding: 8px;
+        border: none;
+        border-radius: 5px;
+        background: linear-gradient(135deg, #4a3f7d, #5a4f8d);
+        color: white;
+        cursor: pointer;
+        transition: all 0.3s;
+        margin-top: 5px;
+        font-size: 0.8rem;
+      }
+
+      .upgrade-btn:hover:not(:disabled) {
+        background: linear-gradient(135deg, #5a4f8d, #6a5f9d);
+        transform: translateY(-2px);
+      }
+
+      .upgrade-btn:disabled {
+        background: linear-gradient(135deg, #3a3f5d, #4a4f6d);
+        cursor: not-allowed;
+        opacity: 0.7;
+      }
+
+      /* Стили для скинов */
+      .skin {
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 10px;
+        padding: 15px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+        border: 2px solid #4a3f7d;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .skin:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      }
+
+      .skin.owned {
+        border-color: #a1c4fd;
+      }
+
+      .skin.active {
+        border-color: #ff9a9e;
+        background: rgba(255, 154, 158, 0.1);
+      }
+
+      .skin.locked {
+        cursor: not-allowed;
+        opacity: 0.6;
+      }
+
+      .skin.locked:hover {
+        transform: none;
+        box-shadow: none;
+      }
+
+      .skin-preview {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 10px;
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        border-radius: 10px;
+        font-size: 3rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .skin-name {
+        font-weight: bold;
+        margin-bottom: 5px;
+        color: #fad0c4;
+      }
+
+      .skin-description {
+        font-size: 0.7rem;
+        margin-bottom: 10px;
+        color: #a1c4fd;
+        min-height: 30px;
+      }
+
+      .skin-cost {
+        color: #ff9a9e;
+        font-size: 0.8rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .skin-cost::before {
+        content: "🐟";
+        margin-right: 5px;
+      }
+
+      .skin-owned {
+        color: #a1c4fd;
+        font-size: 0.7rem;
+      }
+
+      .skin-locked {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0, 0, 0, 0.8);
+        padding: 5px 10px;
+        border-radius: 5px;
+        font-size: 0.7rem;
+        color: #ff9a9e;
+      }
+
+      @media (max-width: 480px) {
+        .skin-preview {
+          width: 60px;
+          height: 60px;
+          font-size: 2rem;
+        }
+
+        .skin-name {
+          font-size: 0.8rem;
+        }
+
+        .skin-description {
+          font-size: 0.6rem;
+        }
+
+        .upgrade-name {
+          font-size: 0.8rem;
+        }
+
+        .audio-init-title {
+          font-size: 1.5rem;
+        }
+
+        .audio-init-btn {
+          font-size: 1rem;
+          padding: 12px 20px;
+        }
+      }
+
+      /* Стили для скроллбаров */
+      .chat-messages::-webkit-scrollbar,
+      .battle-log::-webkit-scrollbar,
+      .online-players::-webkit-scrollbar {
+        width: 6px;
+      }
+
+      .chat-messages::-webkit-scrollbar-track,
+      .battle-log::-webkit-scrollbar-track,
+      .online-players::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 3px;
+      }
+
+      .chat-messages::-webkit-scrollbar-thumb,
+      .battle-log::-webkit-scrollbar-thumb,
+      .online-players::-webkit-scrollbar-thumb {
+        background: #4a3f7d;
+        border-radius: 3px;
+      }
+
+      .chat-messages::-webkit-scrollbar-thumb:hover,
+      .battle-log::-webkit-scrollbar-thumb:hover,
+      .online-players::-webkit-scrollbar-thumb:hover {
+        background: #5a4f8d;
+      }
+
+      .player-item.selected {
+        border-left: 3px solid #ff9a9e !important;
+        background: rgba(255, 154, 158, 0.2) !important;
+        transform: scale(1.02);
+        transition: all 0.3s ease;
+      }
+
+      /* Стили для аудио контролов в основном блоке */
+      .audio-controls-main {
+        margin: 15px 0;
+        display: flex;
+        justify-content: center;
+      }
+
+      .audio-controls-main .audio-panel {
+        background: rgba(10, 14, 42, 0.9);
+        border-radius: 15px;
+        padding: 15px;
+        border: 2px solid #4a3f7d;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .audio-controls-main .audio-label {
+        margin-bottom: 0;
+        margin-right: 10px;
+      }
+
+      /* Улучшенные стили для выбора игроков */
+      .player-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px;
+        margin-bottom: 8px;
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 8px;
+        border-left: 3px solid #a1c4fd;
+        transition: all 0.3s;
+        cursor: pointer;
+      }
+
+      .player-item:hover {
+        background: rgba(74, 63, 125, 0.3);
+        transform: translateY(-2px);
+      }
+
+      .player-item.selected {
+        border-left: 3px solid #ff9a9e !important;
+        background: rgba(255, 154, 158, 0.2) !important;
+        transform: scale(1.02);
+        box-shadow: 0 4px 12px rgba(255, 154, 158, 0.3);
+      }
+
+      .player-item.me {
+        border-left: 3px solid #ff9a9e;
+        background: rgba(255, 154, 158, 0.1);
+      }
+
+      .player-item.me.selected {
+        border-left: 3px solid #ff9a9e !important;
+        background: rgba(255, 154, 158, 0.25) !important;
+      }
+
+      .upgrade {
+        background: rgba(0, 0, 0, 0.3);
+        padding: 15px;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s;
+        border: 1px solid #4a3f7d;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .upgrade:hover {
+        background: rgba(74, 63, 125, 0.3);
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      }
+
+      .upgrade-btn {
+        width: 100%;
+        padding: 10px;
+        border: none;
+        border-radius: 5px;
+        background: linear-gradient(135deg, #4a3f7d, #5a4f8d);
+        color: white;
+        cursor: pointer;
+        transition: all 0.3s;
+        margin-top: 8px;
+        font-size: 0.9rem;
+        font-weight: bold;
+      }
+
+      .upgrade-btn:hover:not(:disabled) {
+        background: linear-gradient(135deg, #5a4f8d, #6a5f9d);
+        transform: translateY(-2px);
+      }
+
+      .upgrade-btn:disabled {
+        background: linear-gradient(135deg, #3a3f5d, #4a4f6d);
+        cursor: not-allowed;
+        opacity: 0.7;
+      }
+
+      @media (max-width: 768px) {
+        .audio-controls-main .audio-panel {
+          flex-direction: column;
+          gap: 10px;
+        }
+
+        .audio-controls-main .audio-label {
+          margin-right: 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="audio-init-overlay" id="audioInitOverlay">
+      <h2 class="audio-init-title">🎵 КОСМИЧЕСКАЯ МУЗЫКА 🎵</h2>
+      <p style="margin-bottom: 30px; font-size: 1.1rem; color: #fad0c4">
+        Для включения музыки потребуется клик по игровому полю после загрузки
+      </p>
+
+      <button class="audio-init-btn" id="enableAudioBtn">
+        🎵 РАЗРЕШИТЬ МУЗЫКУ И ЗВУКИ
+      </button>
+
+      <button
+        class="audio-init-btn"
+        id="disableAudioBtn"
+        style="background: linear-gradient(135deg, #666, #999)"
+      >
+        🔇 ИГРАТЬ БЕЗ ЗВУКА
+      </button>
+
+      <div class="audio-init-option">
+        После включения кликните по косатке для запуска музыки
+      </div>
+    </div>
+
+    <div class="connection-status disconnected" id="connectionStatus">
+      Отключен
+    </div>
+
+    <div class="container">
+      <header>
+        <h1>Косатка Клик: Космическое Приключение</h1>
+        <p class="subtitle">
+          Помоги космической кошке Косатке собрать как можно больше рыбок!
+        </p>
+      </header>
+      <!-- Обновленная структура game-area -->
+      <div class="game-area">
+        <div class="main-game">
+          <div class="player-info">
+            <div class="resource">
+              <div class="resource-label">Рыбки</div>
+              <div class="resource-value" id="resources">0</div>
+            </div>
+            <div class="resource">
+              <div class="resource-label">Рыбок/клик</div>
+              <div class="resource-value" id="click-power">1</div>
+            </div>
+            <div class="resource">
+              <div class="resource-label">Рыбок/сек</div>
+              <div class="resource-value" id="auto-power">0</div>
+            </div>
+          </div>
+
+          <div class="kosatka-area" id="kosatka">
+            <div class="kosatka-img">
+              <img src="cat.png" alt="Косатка" id="kosatka-skin" />
+            </div>
+            <div
+              class="boost-indicator"
+              id="boost-indicator"
+              style="display: none"
+            >
+              БУСТ x2!
+            </div>
+          </div>
+
+          <!-- Чат перенесен сюда -->
+          <div class="chat-container">
+            <h2 class="chat-title">Космический Чат</h2>
+            <div class="chat-messages" id="chat-messages">
+              <div class="message system">
+                Добро пожаловать в космический чат!
+              </div>
+            </div>
+            <div class="chat-input-container">
+              <input
+                type="text"
+                class="chat-input"
+                id="chat-input"
+                placeholder="Введите сообщение..."
+                maxlength="200"
+              />
+              <button class="chat-send" id="chat-send">Отпр.</button>
+            </div>
+          </div>
+
+          <h2 style="color: #fad0c4; margin-bottom: 10px">
+            Улучшения для Косатки
+          </h2>
+          <div class="upgrades" id="upgrades">
+            <!-- Улучшения будут добавлены через JavaScript -->
+          </div>
+
+          <div class="skins-container">
+            <h2 class="skins-title">Космические Скины</h2>
+            <div class="skins-grid" id="skins-grid">
+              <!-- Скины будут добавлены через JavaScript -->
+            </div>
+          </div>
+
+          <div class="cat-fact">
+            <strong>Факт о кошках:</strong> Кошка Косатка получила своё имя за
+            любовь к рыбке и космическим приключениям!
+          </div>
+        </div>
+
+        <div class="right-column">
+          <!-- Онлайн игроки -->
+          <div class="online-players">
+            <h2 class="online-title">Космические коты онлайн</h2>
+            <ul class="players-list" id="players-list">
+              <li class="player-item">
+                <span class="player-name">Загрузка...</span>
+                <span class="player-resources">0</span>
+              </li>
+            </ul>
+
+            <div class="cat-fact">
+              <strong>Совет:</strong> Общайтесь с другими космическими котами и
+              соревнуйтесь за звание лучшего рыболова!
+            </div>
+          </div>
+
+          <!-- Лидерборд -->
+          <div class="online-players" style="margin-top: 15px">
+            <h2 class="online-title">Таблица лидеров</h2>
+            <div
+              style="
+                display: flex;
+                gap: 8px;
+                align-items: center;
+                margin-bottom: 8px;
+              "
+            >
+              <input
+                id="custom-nick"
+                placeholder="Введите ник (опционально)"
+                style="
+                  flex: 1;
+                  padding: 6px;
+                  border-radius: 6px;
+                  background: rgba(0, 0, 0, 0.15);
+                  border: 1px solid #4a3f7d;
+                  color: #fff;
+                "
+              />
+              <button id="save-nick" class="upgrade-btn small">
+                Сохранить
+              </button>
+            </div>
+            <ol
+              id="leaderboard-list"
+              style="padding-left: 18px; margin-top: 10px"
+            >
+              <li>Загрузка...</li>
+            </ol>
+            <div style="text-align: center; margin-top: 8px">
+              <button id="refresh-leaderboard" class="upgrade-btn">
+                Обновить
+              </button>
+            </div>
+          </div>
+
+          <!-- Кланы -->
+          <div class="online-players" style="margin-top: 15px">
+            <h2 class="online-title">Кланы</h2>
+            <div style="margin-bottom: 8px; display: flex; gap: 6px">
+              <input
+                id="new-clan-name"
+                placeholder="Название клана"
+                style="
+                  flex: 1;
+                  padding: 6px;
+                  border-radius: 6px;
+                  background: rgba(0, 0, 0, 0.3);
+                  border: 1px solid #4a3f7d;
+                  color: #fff;
+                "
+              />
+              <button id="create-clan" class="upgrade-btn">Создать</button>
+            </div>
+            <div id="clans-list">Загрузка кланов...</div>
+          </div>
+
+          <!-- Ежедневные задания -->
+          <div class="online-players" style="margin-top: 15px">
+            <h2 class="online-title">Ежедневные задания</h2>
+            <div id="tasks-list">Загрузка заданий...</div>
+          </div>
+
+          <!-- Баттлы -->
+          <div class="battle-container">
+            <h2 class="battle-title">Космические Батлы</h2>
+            <div class="battle-stats">
+              <div class="battle-stat">
+                <div>Ваше здоровье</div>
+                <div id="player-health">100/100</div>
+                <div class="battle-health">
+                  <div
+                    class="battle-health-fill"
+                    id="player-health-bar"
+                    style="width: 100%"
+                  ></div>
+                </div>
+              </div>
+              <div class="battle-stat">
+                <div>Противник</div>
+                <div id="opponent-health">100/100</div>
+                <div class="battle-health">
+                  <div
+                    class="battle-health-fill"
+                    id="opponent-health-bar"
+                    style="width: 100%"
+                  ></div>
+                </div>
+              </div>
+            </div>
+            <div class="battle-actions" id="battle-actions">
+              <button class="battle-btn" id="attack-btn">
+                Атака (10 рыбок)
+              </button>
+              <button class="battle-btn" id="special-btn">
+                Супер-удар (25 рыбок)
+              </button>
+              <button class="battle-btn" id="challenge-btn">
+                Вызвать на бой
+              </button>
+            </div>
+            <div class="battle-log" id="battle-log">
+              <div class="battle-event system">
+                Выберите противника из списка и начните битву!
+              </div>
+            </div>
+
+            <div
+              class="audio-controls-main"
+              id="audioControls"
+              style="display: none"
+            >
+              <div class="audio-panel">
+                <div class="audio-label">ЗВУК</div>
+                <button class="audio-btn" id="music-toggle" title="Музыка">
+                  🎵
+                </button>
+                <button class="audio-btn" id="sfx-toggle" title="Звуки">
+                  🔊
+                </button>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value="50"
+                  class="volume-slider"
+                  id="volume-slider"
+                  title="Громкость"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="notification" id="notification">
+      Новый космический кот присоединился к игре!
+    </div>
+
+    <!-- Аудио элементы с локальными файлами -->
+    <audio id="background-music" loop preload="auto">
+      <source src="background-music.mp3" type="audio/mpeg" />
+      <source src="background-music.ogg" type="audio/ogg" />
+      Ваш браузер не поддерживает аудио элементы.
+    </audio>
+
+    <audio id="click-sound" preload="auto">
+      <source src="click.mp3" type="audio/mpeg" />
+      <source src="click.ogg" type="audio/ogg" />
+    </audio>
+
+    <audio id="upgrade-sound" preload="auto">
+      <source src="upgrade.mp3" type="audio/mpeg" />
+      <source src="upgrade.ogg" type="audio/ogg" />
+    </audio>
+
+    <audio id="battle-sound" preload="auto">
+      <source src="battle.mp3" type="audio/mpeg" />
+      <source src="sounds/battle.ogg" type="audio/ogg" />
+    </audio>
+
+    <audio id="victory-sound" preload="auto">
+      <source src="victory.mp3" type="audio/mpeg" />
+      <source src="victory.ogg" type="audio/ogg" />
+    </audio>
+
+    <audio id="notification-sound" preload="auto">
+      <source src="notification.mp3" type="audio/mpeg" />
+      <source src="notification.ogg" type="audio/ogg" />
+    </audio>
+
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script>
+      // Игровые переменные
+      let resources = 0;
+      let clickPower = 1;
+      let autoPower = 0;
+      let boostActive = false;
+      let boostTimeLeft = 0;
+      // Stable player name: read from localStorage if present, otherwise generate once and persist
+      let playerName = (function () {
+        try {
+          const saved = localStorage.getItem("kosatkaClicker");
+          if (saved) {
+            const gd = JSON.parse(saved);
+            if (gd && gd.playerName) return gd.playerName;
+          }
+        } catch (e) {
+          // ignore
+        }
+        const baseNames = ["Кот", "Косатка", "Кит", "Дельфин", "Моряк"];
+        const name =
+          baseNames[Math.floor(Math.random() * baseNames.length)] +
+          "_" +
+          (100 + Math.floor(Math.random() * 900));
+        try {
+          const obj = JSON.parse(
+            localStorage.getItem("kosatkaClicker") || "{}"
+          );
+          obj.playerName = name;
+          localStorage.setItem("kosatkaClicker", JSON.stringify(obj));
+        } catch (e) {
+          // ignore
+        }
+        return name;
+      })();
+      let socket = null;
+      let selectedOpponent = null;
+      let inBattle = false;
+      let battleLog = [];
+      let currentBattleId = null;
+      let playerHealth = 100;
+      let opponentHealth = 100;
+      let currentSkin = "default";
+      let ownedSkins = ["default"];
+      let currentPlayerId = null;
+      let gameInitialized = false;
+
+      // ОБНОВЛЕННЫЕ СКИНЫ ДЛЯ КОСАТКИ
+      const skins = [
+        {
+          id: "cat",
+          name: "Обычная Косатка",
+          description: "Стандартный космический кот",
+          cost: 0,
+          bonus: 0,
+          owned: true,
+          preview: "🐱",
+        },
+        {
+          id: "skin3",
+          name: "Рыбный Гурман",
+          description: "Косатка балдеет от рыбы",
+          cost: 750,
+          bonus: 8,
+          owned: false,
+          preview: "😻",
+        },
+        {
+          id: "skin4",
+          name: "Галактический Исследователь",
+          description: "Любопытство увидеть новые галактики",
+          cost: 1500,
+          bonus: 12,
+          owned: false,
+          preview: "🔭",
+        },
+        {
+          id: "skin5",
+          name: "Энергетический Космонавт",
+          description: "Космическая зарядка",
+          cost: 2500,
+          bonus: 18,
+          owned: false,
+          preview: "⚡",
+        },
+        {
+          id: "skin6",
+          name: "Тюбичный Рыболов",
+          description: "Рыба из тюбика",
+          cost: 4000,
+          bonus: 22,
+          owned: false,
+          preview: "🧴",
+        },
+        {
+          id: "skin7",
+          name: "Вселенский Провидец",
+          description: "Взгляд сквозь вселенную",
+          cost: 6000,
+          bonus: 30,
+          owned: false,
+          preview: "👁️",
+        },
+      ];
+
+      // Улучшения с кошачьей тематикой
+      const upgrades = [
+        {
+          id: 1,
+          name: "Улучшенные когти",
+          description: "Косатка ловит больше рыбок за один клик",
+          cost: 10,
+          power: 1,
+          type: "click",
+          owned: 0,
+        },
+        {
+          id: 2,
+          name: "Автоматическая рыбалка",
+          description: "Косатка ловит рыбок автоматически",
+          cost: 50,
+          power: 1,
+          type: "auto",
+          owned: 0,
+        },
+        {
+          id: 3,
+          name: "Кошачий азарт",
+          description: "Временно удваивает улов рыбок",
+          cost: 100,
+          power: 0,
+          type: "boost",
+          owned: 0,
+        },
+        {
+          id: 4,
+          name: "Космический удочник",
+          description: "Значительно увеличивает автоматический улов",
+          cost: 500,
+          power: 5,
+          type: "auto",
+          owned: 0,
+        },
+        {
+          id: 5,
+          name: "Рыбный магнит",
+          description: "Приманивает в 5 раз больше рыбок",
+          cost: 1000,
+          power: 5,
+          type: "click",
+          owned: 0,
+        },
+        {
+          id: 6,
+          name: "Галактический бустер",
+          description: "Удваивает улов на 30 секунд",
+          cost: 2000,
+          power: 0,
+          type: "boost",
+          owned: 0,
+        },
+        {
+          id: 7,
+          name: "Космический корабль",
+          description: "Косатка может ловить рыбок в дальних галактиках",
+          cost: 5000,
+          power: 10,
+          type: "auto",
+          owned: 0,
+        },
+        {
+          id: 8,
+          name: "Рыбный детектор",
+          description: "Позволяет находить редкие рыбки",
+          cost: 10000,
+          power: 20,
+          type: "click",
+          owned: 0,
+        },
+      ];
+
+      // Случайные кошачьи факты
+      const catFacts = [
+        "Кошки спят около 16 часов в день!",
+        "У кошек более 20 мышц управляют ушами.",
+        "Кошка может прыгнуть на высоту в 6 раз больше её роста.",
+        "Кошки могут пить морскую воду благодаря своим почкам.",
+        "Усы помогают кошкам определять, пролезут ли они в отверстие.",
+        "Кошки мяукают только для общения с людьми.",
+        "Сердце кошки бьется почти в 2 раза быстрее человеческого.",
+        "Кошки могут поворачивать уши на 180 градусов.",
+      ];
+
+      // Элементы DOM
+      let resourcesEl,
+        clickPowerEl,
+        autoPowerEl,
+        kosatkaEl,
+        kosatkaSkinEl,
+        upgradesEl,
+        skinsGridEl;
+      let playersListEl, notificationEl, boostIndicatorEl, connectionStatusEl;
+      let chatMessagesEl, chatInputEl, chatSendEl, battleActionsEl, battleLogEl;
+      let attackBtnEl,
+        specialBtnEl,
+        challengeBtnEl,
+        playerHealthEl,
+        opponentHealthEl;
+      let playerHealthBarEl, opponentHealthBarEl;
+
+      // Аудио переменные
+      let musicEnabled = false;
+      let sfxEnabled = false;
+      let volume = 0.5;
+      let audioInitialized = false;
+      let userInteracted = false;
+      let audioContext = null;
+      let isMusicPlaying = false;
+      let musicPlayAttempted = false;
+
+      // Аудио элементы
+      let backgroundMusic,
+        clickSound,
+        upgradeSound,
+        battleSound,
+        victorySound,
+        notificationSound;
+      let musicToggleBtn,
+        sfxToggleBtn,
+        volumeSlider,
+        audioInitOverlay,
+        audioControls;
+      let enableAudioBtn, disableAudioBtn;
+
+      // ========== ДОБАВЛЕННЫЕ ФУНКЦИИ ==========
+
+      // Обновление интерфейса
+      function updateUI() {
+        if (resourcesEl) resourcesEl.textContent = formatNumber(resources);
+        if (clickPowerEl) clickPowerEl.textContent = formatNumber(clickPower);
+        if (autoPowerEl) autoPowerEl.textContent = formatNumber(autoPower);
+
+        // Обновление скина
+        if (kosatkaSkinEl) {
+          kosatkaSkinEl.src =
+            currentSkin === "default" ? "cat.png" : `${currentSkin}.png`;
+        }
+
+        // Обновление улучшений
+        updateUpgradesUI();
+
+        // Обновление скинов
+        updateSkinsUI();
+
+        // Сохранение игры
+        saveGame();
+      }
+
+      // Форматирование чисел
+      function formatNumber(num) {
+        if (num >= 1000000) {
+          return (num / 1000000).toFixed(1) + "M";
+        } else if (num >= 1000) {
+          return (num / 1000).toFixed(1) + "K";
+        }
+        return num.toString();
+      }
+
+      // Создание улучшений
+      function createUpgrades() {
+        if (!upgradesEl) return;
+
+        upgradesEl.innerHTML = "";
+
+        upgrades.forEach((upgrade) => {
+          const upgradeEl = document.createElement("div");
+          upgradeEl.className = "upgrade";
+          upgradeEl.innerHTML = `
+      <div class="upgrade-name">${upgrade.name}</div>
+      <div class="upgrade-description">${upgrade.description}</div>
+      <div class="upgrade-cost">Стоимость: ${formatNumber(
+        upgrade.cost
+      )} рыбок</div>
+      <div class="upgrade-owned">Куплено: ${upgrade.owned}</div>
+      <button class="upgrade-btn" data-id="${upgrade.id}" ${
+            resources < upgrade.cost ? "disabled" : ""
+          }>
+        ${resources < upgrade.cost ? "Недостаточно рыбок" : "Купить"}
+      </button>
+    `;
+
+          upgradesEl.appendChild(upgradeEl);
+        });
+
+        // Добавляем обработчики для кнопок улучшений
+        document.querySelectorAll(".upgrade-btn").forEach((btn) => {
+          btn.addEventListener("click", function () {
+            const upgradeId = parseInt(this.getAttribute("data-id"));
+            buyUpgrade(upgradeId);
+          });
+        });
+      }
+
+      // Обновление интерфейса улучшений
+      function updateUpgradesUI() {
+        document.querySelectorAll(".upgrade").forEach((upgradeEl, index) => {
+          const upgrade = upgrades[index];
+          if (upgrade) {
+            const costEl = upgradeEl.querySelector(".upgrade-cost");
+            const ownedEl = upgradeEl.querySelector(".upgrade-owned");
+            const btn = upgradeEl.querySelector(".upgrade-btn");
+
+            if (costEl)
+              costEl.textContent = `Стоимость: ${formatNumber(
+                upgrade.cost
+              )} рыбок`;
+            if (ownedEl) ownedEl.textContent = `Куплено: ${upgrade.owned}`;
+            if (btn) {
+              btn.disabled = resources < upgrade.cost;
+              btn.textContent =
+                resources < upgrade.cost ? "Недостаточно рыбок" : "Купить";
+            }
+          }
+        });
+      }
+
+      // Покупка улучшения
+      function buyUpgrade(upgradeId) {
+        const upgrade = upgrades.find((u) => u.id === upgradeId);
+        if (!upgrade || resources < upgrade.cost) {
+          showNotification("Недостаточно рыбок для покупки!");
+          return;
+        }
+
+        resources -= upgrade.cost;
+
+        if (upgrade.type === "click") {
+          clickPower += upgrade.power;
+          showNotification(
+            `Улучшена сила клика! +${upgrade.power} рыбок за клик`
+          );
+        } else if (upgrade.type === "auto") {
+          autoPower += upgrade.power;
+          showNotification(
+            `Улучшена автоматическая добыча! +${upgrade.power} рыбок в секунду`
+          );
+        } else if (upgrade.type === "boost") {
+          activateBoost(upgrade.id);
+        }
+
+        upgrade.owned++;
+        upgrade.cost = Math.floor(upgrade.cost * 1.5); // Увеличиваем стоимость
+
+        playSound(upgradeSound);
+        updateUI();
+        saveGame();
+      }
+
+      // Активация буста
+      function activateBoost(upgradeId) {
+        if (boostActive) {
+          showNotification("Буст уже активен!");
+          return;
+        }
+
+        boostActive = true;
+        boostTimeLeft = upgradeId === 3 ? 10 : 30; // 10 или 30 секунд
+
+        if (boostIndicatorEl) {
+          boostIndicatorEl.style.display = "block";
+        }
+
+        showNotification(
+          "Буст активирован! Улов удвоен на " + boostTimeLeft + " секунд!"
+        );
+
+        // Запускаем таймер буста
+        const boostInterval = setInterval(() => {
+          boostTimeLeft--;
+
+          if (boostTimeLeft <= 0) {
+            boostActive = false;
+            if (boostIndicatorEl) {
+              boostIndicatorEl.style.display = "none";
+            }
+            showNotification("Буст закончился!");
+            clearInterval(boostInterval);
+          }
+        }, 1000);
+      }
+
+      // Создание скинов
+      function createSkins() {
+        if (!skinsGridEl) return;
+
+        skinsGridEl.innerHTML = "";
+
+        skins.forEach((skin) => {
+          const skinEl = document.createElement("div");
+          skinEl.className = `skin ${skin.owned ? "owned" : "locked"} ${
+                      Skin === " currentSkin === skin.id ? "active" : ""
+          }`;
+          skinEl.innerHTML = `
+            <div class="skin-preview">${skin.preview}</div>
+            <div class="skin-name">${skin.name}</div>
+            <div class="skin-description">${skin.description}</div>
+            <div class="skin-cost">${
+              skin.owned ? "Куплен" : `${formatNumber(skin.cost)} рыбок`
+            }</div>
+            <div class="skin-bonus">Бонус: +${skin.bonus}%</div>
+            <button class="skin-btn" data-id="${skin.id}" ${
+            !skin.owned && resources < skin.cost ? "disabled" : ""
+          }>
+              ${
+                currentSkin === skin.id
+                  ? "Выбран"
+                  : skin.owned
+                  ? "Выбрать"
+                  : "Купить"
+              }
+            </button>
+          `;
+
+          skinsGridEl.appendChild(skinEl);
+        });
+
+        // Добавляем обработчики для кнопок скинов
+        document.querySelectorAll(".skin-btn").forEach((btn) => {
+          btn.addEventListener("click", function () {
+            const skinId = this.getAttribute("data-id");
+            handleSkinClick(skinId);
+          });
+        });
+      }
+
+      // Обновление интерфейса скинов
+      function updateSkinsUI() {
+        document.querySelectorAll(".skin").forEach((skinEl, index) => {
+          const skin = skins[index];
+          if (skin) {
+            const costEl = skinEl.querySelector(".skin-cost");
+            const btn = skinEl.querySelector(".skin-btn");
+
+            skinEl.className = `skin ${skin.owned ? "owned" : "locked"} ${
+              currentSkin === skin.id ? "active" : ""
+            }`;
+
+            if (costEl) {
+              costEl.textContent = skin.owned
+                ? "Куплен"
+                : `${formatNumber(skin.cost)} рыбок`;
+            }
+
+            if (btn) {
+              btn.disabled = !skin.owned && resources < skin.cost;
+              btn.textContent =
+                currentSkin === skin.id
+                  ? "Выбран"
+                  : skin.owned
+                  ? "Выбрать"
+                  : "Купить";
+            }
+          }
+        });
+      }
+
+      // Обработка клика по скину
+      function handleSkinClick(skinId) {
+        const skin = skins.find((s) => s.id === skinId);
+        if (!skin) return;
+
+        if (skin.owned) {
+          currentSkin = skinId;
+          showNotification(`Скин "${skin.name}" выбран!`);
+        } else if (resources >= skin.cost) {
+          resources -= skin.cost;
+          skin.owned = true;
+          ownedSkins.push(skinId);
+          currentSkin = skinId;
+          showNotification(`Скин "${skin.name}" куплен и выбран!`);
+        }
+
+        updateUI();
+        saveGame();
+      }
+
+      // Отправка сообщения в чат
+      function sendChatMessage() {
+        if (!chatInputEl || !socket) return;
+
+        const message = chatInputEl.value.trim();
+        if (message === "") return;
+
+        // Отправляем сообщение на сервер
+        socket.emit("chat-message", {
+          message: message,
+          timestamp: new Date().toLocaleTimeString(),
+        });
+
+        // Очищаем поле ввода
+        chatInputEl.value = "";
+      }
+
+      // Добавление сообщения в чат
+      function addChatMessage(playerName, message, timestamp) {
+        if (!chatMessagesEl) return;
+
+        const messageEl = document.createElement("div");
+        const isOwnMessage = playerName === "Вы" || playerName === playerName;
+
+        messageEl.className = `message ${isOwnMessage ? "own" : ""} ${
+          playerName === "Система" ? "system" : ""
+        }`;
+
+        if (playerName !== "Система") {
+          messageEl.innerHTML = `
+                  <div class="message-sender">${playerName}:</div>
+                  <div class="message-text">${message}</div>
+                  <div class="message-time">${timestamp}</div>
+              `;
+        } else {
+          messageEl.innerHTML = `
+                  <div class="message-text">${message}</div>
+                  <div class="message-time">${timestamp}</div>
+              `;
+        }
+
+        chatMessagesEl.appendChild(messageEl);
+
+        // Прокручиваем чат вниз
+        chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
+
+        // Воспроизводим звук уведомления для чужих сообщений
+        if (!isOwnMessage && playerName !== "Система") {
+          playSound(notificationSound);
+        }
+      }
+
+      // Игровой цикл
+      function gameLoop() {
+        // Автоматический сбор ресурсов
+        if (autoPower > 0) {
+          const baseGain = autoPower;
+          const gain = boostActive ? baseGain * 2 : baseGain;
+          resources += gain;
+        }
+
+        // Обновление буста
+        if (boostActive) {
+          boostTimeLeft--;
+          if (boostTimeLeft <= 0) {
+            boostActive = false;
+            if (boostIndicatorEl) {
+              boostIndicatorEl.style.display = "none";
+            }
+            showNotification("Буст закончился!");
+          }
+        }
+
+        // Обновление интерфейса
+        updateUI();
+
+        // Обновление данных на сервере
+        if (socket && socket.connected) {
+          socket.emit("player-update", {
+            name: playerName,
+            resources: resources,
+            clickPower: clickPower,
+            autoPower: autoPower,
+            currentSkin: currentSkin,
+            ownedSkins: ownedSkins,
+          });
+        }
+      }
+
+      // Обработка клика по косатке
+      function clickKosatka(event) {
+        const baseGain = clickPower;
+        const gain = boostActive ? baseGain * 2 : baseGain;
+        resources += gain;
+
+        // Создаем эффект частиц
+        createClickEffect(event);
+
+        playSound(clickSound);
+        updateUI();
+      }
+
+      // Создание эффекта при клике
+      function createClickEffect(event) {
+        const effect = document.createElement("div");
+        effect.className = "click-effect";
+        effect.textContent = `+${formatNumber(
+          boostActive ? clickPower * 2 : clickPower
+        )}`;
+        effect.style.left = event.clientX - 20 + "px";
+        effect.style.top = event.clientY - 20 + "px";
+
+        document.body.appendChild(effect);
+
+        setTimeout(() => {
+          effect.remove();
+        }, 1000);
+      }
+
+      // Показ уведомления
+      function showNotification(message) {
+        if (!notificationEl) return;
+
+        notificationEl.textContent = message;
+        notificationEl.style.display = "block";
+        notificationEl.style.opacity = "1";
+
+        playSound(notificationSound);
+
+        setTimeout(() => {
+          notificationEl.style.opacity = "0";
+          setTimeout(() => {
+            notificationEl.style.display = "none";
+          }, 500);
+        }, 3000);
+      }
+
+      // Показ случайного факта о кошках
+      function showRandomCatFact() {
+        const randomFact =
+          catFacts[Math.floor(Math.random() * catFacts.length)];
+        const factElement = document.querySelector(".cat-fact");
+        if (factElement) {
+          factElement.innerHTML = `<strong>Факт о кошках:</strong> ${randomFact}`;
+        }
+      }
+
+      // Обновление списка игроков
+      function updatePlayersList(players) {
+        if (!playersListEl) return;
+
+        playersListEl.innerHTML = "";
+
+        if (!Array.isArray(players)) {
+          console.error("❌ players не является массивом:", players);
+          players = [];
+        }
+
+        if (players.length === 0) {
+          const emptyItem = document.createElement("li");
+          emptyItem.className = "player-item";
+          emptyItem.innerHTML =
+            '<span class="player-name">Нет игроков онлайн</span>';
+          playersListEl.appendChild(emptyItem);
+          return;
+        }
+
+        players.forEach((player) => {
+          if (!player || !player.id || !player.name) {
+            console.warn("❌ Некорректные данные игрока:", player);
+            return;
+          }
+
+          const playerItem = document.createElement("li");
+          const isMe = player.id === currentPlayerId;
+          const isSelected =
+            selectedOpponent && selectedOpponent.id === player.id;
+
+          playerItem.className = `player-item ${isMe ? "me" : ""} ${
+            isSelected ? "selected" : ""
+          }`;
+          playerItem.innerHTML = `
+      <span class="player-name">${player.name} ${isMe ? "(Вы)" : ""}</span>
+      <span class="player-resources">${formatNumber(
+        player.resources || 0
+      )}</span>
+    `;
+
+          // Добавляем обработчик для вызова на бой (только не для себя)
+          if (!isMe) {
+            playerItem.style.cursor = "pointer";
+            playerItem.title = "Кликните чтобы выбрать для битвы";
+            playerItem.addEventListener("click", () => {
+              // Снимаем выделение со всех игроков
+              document.querySelectorAll(".player-item").forEach((item) => {
+                item.classList.remove("selected");
+              });
+
+              // Выделяем выбранного игрока
+              playerItem.classList.add("selected");
+
+              selectedOpponent = player;
+              showNotification(`Выбран противник: ${player.name}`);
+
+              // Обновляем кнопку вызова на бой
+              updateBattleButtons();
+            });
+          }
+
+          playersListEl.appendChild(playerItem);
+        });
+      }
+
+      // Отправка сообщения в чат
+      function fetchTasks() {
+        const container = document.getElementById("tasks-list");
+        if (!container) return;
+        container.innerHTML = "Загрузка заданий...";
+
+        socket &&
+          socket.emit("get-my-tasks", {}, (res) => {
+            if (!res || !res.ok) {
+              container.textContent = "Не удалось загрузить задания";
+              return;
+            }
+
+            const tasks = res.tasks || [];
+            container.innerHTML = "";
+            if (tasks.length === 0) {
+              container.textContent = "Нет заданий";
+              return;
+            }
+
+            tasks.forEach((task) => {
+              const div = document.createElement("div");
+              div.style.padding = "8px";
+              div.style.borderBottom = "1px solid rgba(255,255,255,0.05)";
+              const statusText =
+                task.status === "completed"
+                  ? "Выполнено"
+                  : "Не выполнено";
+              const last = task.lastCompletedAt
+                ? ` (последняя: ${new Date(
+                    task.lastCompletedAt
+                  ).toLocaleString()})`
+                : "";
+              div.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;"><div><strong>${
+                task.title
+              }</strong><div style='font-size:0.8rem;color:#a1c4fd'>${
+                task.description
+              }</div><div style='font-size:0.75rem;color:#a1c4fd'>${statusText}${last}</div></div><div style='text-align:right'><div style='font-weight:bold'>${
+                task.reward
+              }🐟</div><button class='upgrade-btn small' data-claim='${
+                task.id
+              }' ${
+                task.claimable ? "" : "disabled"
+              }>${
+                task.claimable ? "Забрать" : "Недоступно"
+              }</button></div></div>`;
+
+              container.appendChild(div);
+            });
+
+            container
+              .querySelectorAll("button[data-claim]")
+              .forEach((btn) => {
+                btn.addEventListener("click", () => {
+                  const taskId = btn.getAttribute("data-claim");
+                  socket.emit("claim-task", { taskId }, (res) => {
+                    if (res && res.ok) {
+                      showNotification("Награда получена");
+                      socket.emit("get-players");
+                      fetchLeaderboard();
+                      fetchTasks();
+                    } else {
+                      showNotification("Ошибка: " + (res && res.error));
+                      fetchTasks();
+                    }
+                  });
+                });
+              });
+          });
+      }
+
+      function performAttack() {
+        if (!inBattle || !socket) return;
+
+        const battleId = getCurrentBattleId();
+        if (!battleId) {
+          showNotification

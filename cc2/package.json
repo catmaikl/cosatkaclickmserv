@@ -1,0 +1,19 @@
+{
+  "name": "kosatka-server",
+  "version": "1.0.0",
+  "description": "Server for Kosatka Clicker with leaderboard, clans, and daily tasks (SQLite)",
+  "main": "serv.js",
+  "scripts": {
+    "start": "node serv.js",
+    "build": "echo 'No build step required'",
+    "dev": "node serv.js"
+  },
+  "dependencies": {
+    "sqlite3": "^5.1.6",
+    "express": "^4.18.2",
+    "socket.io": "^4.7.2"
+  },
+  "engines": {
+    "node": "18.x || 20.x"
+  }
+}
