@@ -10,7 +10,7 @@ const app = express();
 const server = http.createServer(app);
 
 // Получаем разрешенные домены из переменных окружения
-const allowedOrigins = 'https://cosatkaclick-2.vercel.app'
+const allowedOrigins = 'https://cosatka-clickgame-277-p2.netlify.app'
 
 // Настройки CORS для Socket.IO
 const io = socketIo(server, {
@@ -1026,4 +1026,5 @@ server.listen(PORT, '0.0.0.0', () => {
     console.log(`📍 Статус сервера: http://localhost:${PORT}/status`);
     console.log(`👥 Игроки онлайн: http://localhost:${PORT}/players`);
     console.log(`⚔️  Активные баттлы: http://localhost:${PORT}/battles`);
+
 });
